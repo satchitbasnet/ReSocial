@@ -1,15 +1,42 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { PLANS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const planKeys = ["starter", "pro", "agency"] as const;
 
 export function PricingSection({ showToggle = true }: { showToggle?: boolean }) {
   const [yearly, setYearly] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const router = useRouter();
+
+  async function handleCheckout(plan: (typeof planKeys)[number]) {
+    setLoadingPlan(plan);
+    try {
+      const res = await fetch("/api/stripe/create-checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          plan,
+          interval: yearly ? "annual" : "monthly",
+        }),
+      });
+      const data = await res.json();
+      if (res.status === 401) {
+        router.push("/signup");
+        return;
+      }
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } finally {
+      setLoadingPlan(null);
+    }
+  }
 
   return (
     <section className="py-24" id="pricing">
@@ -105,11 +132,15 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
                 </ul>
 
                 <Button
-                  href="/signup"
                   variant={isPopular ? "primary" : "outline"}
                   className="w-full"
+                  onClick={() => handleCheckout(key)}
+                  disabled={loadingPlan === key}
                 >
-                  Start 14-day free trial
+                  {loadingPlan === key && (
+                    <Loader2 size={16} className="mr-2 animate-spin" />
+                  )}
+                  {loadingPlan === key ? "Redirecting..." : "Get started"}
                 </Button>
               </div>
             );

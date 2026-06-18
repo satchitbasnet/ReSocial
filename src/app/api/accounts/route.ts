@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
@@ -88,7 +88,12 @@ export async function DELETE(request: NextRequest) {
     const db = getDb();
     await db
       .delete(connectedAccounts)
-      .where(eq(connectedAccounts.id, accountId));
+      .where(
+        and(
+          eq(connectedAccounts.id, accountId),
+          eq(connectedAccounts.userId, session.userId)
+        )
+      );
 
     return NextResponse.json({ success: true });
   } catch (error) {

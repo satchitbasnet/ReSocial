@@ -24,6 +24,12 @@ interface AnalyticsData {
     newFollowers: number;
     postsPublished: number;
   };
+  summaryChange?: {
+    totalViews: number;
+    engagementRate: number;
+    newFollowers: number;
+    postsPublished: number;
+  };
   viewsByPlatform: {
     platform: string;
     views: number;
@@ -105,8 +111,17 @@ export function AnalyticsDashboard() {
 
   if (loading && !data) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <RefreshCw size={28} className="animate-spin text-brand-500" />
+      <div className="space-y-6 animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-48" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-32 bg-gray-100 rounded-2xl" />
+          ))}
+        </div>
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="h-64 bg-gray-100 rounded-2xl" />
+          <div className="h-64 bg-gray-100 rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -131,6 +146,37 @@ export function AnalyticsDashboard() {
     newFollowers: 0,
     postsPublished: 0,
   };
+
+  const change = data?.summaryChange;
+  const isEmpty =
+    summary.postsPublished === 0 && (data?.viewsByPlatform?.length ?? 0) === 0;
+
+  if (isEmpty && !loading) {
+    return (
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2 mb-2">
+          <BarChart3 size={24} className="text-brand-600" />
+          Analytics
+        </h1>
+        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+          <BarChart3 size={48} className="mx-auto text-gray-300 mb-4" />
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            No analytics data yet
+          </h2>
+          <p className="text-gray-600 text-sm mb-6 max-w-sm mx-auto">
+            Connect your social accounts and publish content to start tracking
+            views, engagement, and growth.
+          </p>
+          <a
+            href="/dashboard/accounts"
+            className="inline-flex items-center px-5 py-2.5 rounded-full bg-brand-600 text-white text-sm font-medium hover:bg-brand-700"
+          >
+            Connect accounts
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -187,9 +233,10 @@ export function AnalyticsDashboard() {
         <StatCard
           label="Total Views"
           value={formatViews(summary.totalViews)}
-          sub={`Last ${range.replace("d", " days")}`}
+          sub={`vs previous ${range.replace("d", " days")}`}
           icon={Eye}
           color="text-brand-600 bg-brand-50"
+          changePercent={change?.totalViews}
         />
         <StatCard
           label="Engagement Rate"
@@ -197,6 +244,7 @@ export function AnalyticsDashboard() {
           sub="Likes, comments, shares & saves"
           icon={Heart}
           color="text-pink-600 bg-pink-50"
+          changePercent={change?.engagementRate}
         />
         <StatCard
           label="New Followers"
@@ -204,6 +252,7 @@ export function AnalyticsDashboard() {
           sub="Across all platforms"
           icon={UserPlus}
           color="text-green-600 bg-green-50"
+          changePercent={change?.newFollowers}
         />
         <StatCard
           label="Posts Published"
@@ -211,6 +260,7 @@ export function AnalyticsDashboard() {
           sub="In selected period"
           icon={FileVideo}
           color="text-purple-600 bg-purple-50"
+          changePercent={change?.postsPublished}
         />
       </div>
 

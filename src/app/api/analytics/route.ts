@@ -3,9 +3,12 @@ import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import {
   getAnalyticsDashboard,
-  syncAnalyticsForUser,
-  planHasBestTimeInsight,
 } from "@/lib/analytics/queries";
+import { fullSyncForUser } from "@/lib/analytics/sync";
+import {
+  planHasBestTimeInsight,
+  planHasFollowerTracking,
+} from "@/lib/plans";
 
 const querySchema = z.object({
   range: z.enum(["7d", "30d", "90d"]).default("30d"),
@@ -30,12 +33,18 @@ export async function GET(request: NextRequest) {
     );
 
     const showBestTime = planHasBestTimeInsight(session.plan);
+    const showFollowers = planHasFollowerTracking(session.plan);
 
     return NextResponse.json({
       ...data,
       bestTimeToPost: showBestTime ? data.bestTimeToPost : [],
+      summary: {
+        ...data.summary,
+        newFollowers: showFollowers ? data.summary.newFollowers : 0,
+      },
       features: {
         bestTimeToPost: showBestTime,
+        followerTracking: showFollowers,
         plan: session.plan,
       },
     });
@@ -55,7 +64,7 @@ export async function POST() {
   }
 
   try {
-    await syncAnalyticsForUser(session.userId);
+    await fullSyncForUser(session.userId);
     const data = await getAnalyticsDashboard(session.userId, "30d");
     return NextResponse.json({ success: true, ...data });
   } catch (error) {

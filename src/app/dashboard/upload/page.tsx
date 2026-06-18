@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PLATFORMS } from "@/lib/constants";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Upload, Check, Loader2, X } from "lucide-react";
+import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import { cn } from "@/lib/utils";
 
 interface ConnectedAccount {
@@ -30,6 +31,10 @@ export default function UploadPage() {
   const [dragOver, setDragOver] = useState(false);
   const [scheduleDate, setScheduleDate] = useState("");
   const [publishNow, setPublishNow] = useState(true);
+  const [upgradeModal, setUpgradeModal] = useState<{
+    open: boolean;
+    limit: "videos" | "platforms";
+  }>({ open: false, limit: "videos" });
 
   useEffect(() => {
     fetch("/api/accounts")
@@ -75,17 +80,39 @@ export default function UploadPage() {
     setUploading(true);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      const maxSize = 500 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setError("File too large. Maximum size is 500MB.");
+        return;
+      }
 
       const uploadRes = await fetch("/api/upload", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: file.name,
+          contentType: file.type,
+          contentLength: file.size,
+        }),
       });
       const uploadData = await uploadRes.json();
 
       if (!uploadRes.ok) {
+        if (uploadData.upgradeRequired) {
+          setUpgradeModal({ open: true, limit: uploadData.limit ?? "videos" });
+        }
         setError(uploadData.error || "Upload failed");
+        return;
+      }
+
+      const putRes = await fetch(uploadData.uploadUrl, {
+        method: "PUT",
+        headers: { "Content-Type": uploadData.contentType },
+        body: file,
+      });
+
+      if (!putRes.ok) {
+        setError("Failed to upload file to storage. Please try again.");
         return;
       }
 
@@ -107,6 +134,9 @@ export default function UploadPage() {
       const postData = await postRes.json();
 
       if (!postRes.ok) {
+        if (postData.upgradeRequired) {
+          setUpgradeModal({ open: true, limit: postData.limit ?? "videos" });
+        }
         setError(postData.error || "Publishing failed");
         return;
       }
@@ -210,7 +240,7 @@ export default function UploadPage() {
             <p className="text-gray-700 font-medium mb-1">
               Drag & drop your video or image
             </p>
-            <p className="text-sm text-gray-500 mb-4">MP4, MOV, WebM, JPEG, PNG — up to 100MB</p>
+            <p className="text-sm text-gray-500 mb-4">MP4, MOV, WebM, JPEG, PNG, GIF — up to 500MB</p>
             <label className="cursor-pointer">
               <span className="text-brand-600 font-medium hover:underline">
                 Browse files
@@ -218,7 +248,7 @@ export default function UploadPage() {
               <input
                 type="file"
                 className="hidden"
-                accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png"
+                accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/gif"
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   if (f) handleFile(f);
@@ -342,6 +372,13 @@ export default function UploadPage() {
             ? "Publishing to platforms..."
             : `Publish to ${selectedPlatforms.length} platform${selectedPlatforms.length !== 1 ? "s" : ""}`}
       </Button>
+
+      <UpgradeModal
+        open={upgradeModal.open}
+        onClose={() => setUpgradeModal({ open: false, limit: "videos" })}
+        limit={upgradeModal.limit}
+        currentPlan="trial"
+      />
     </div>
   );
 }

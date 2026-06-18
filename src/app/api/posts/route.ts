@@ -8,9 +8,12 @@ import {
   distributions,
   connectedAccounts,
   users,
+  postMetrics,
 } from "@/lib/db/schema";
 import { publishToPlatform } from "@/lib/platforms/publisher";
 import type { PlatformId } from "@/lib/constants";
+import { checkCanPublish, type UserPlan } from "@/lib/plans";
+import { fullSyncForUser } from "@/lib/analytics/sync";
 
 const createPostSchema = z.object({
   title: z.string().min(1),
@@ -95,9 +98,20 @@ export async function POST(request: NextRequest) {
 
     if (user.plan === "trial" && user.videosPublished >= 10) {
       return NextResponse.json(
-        { error: "Trial limit reached (10 videos). Please upgrade your plan." },
+        {
+          error: "Trial limit reached (10 videos). Please upgrade your plan.",
+          upgradeRequired: true,
+        },
         { status: 403 }
       );
+    }
+
+    const publishLimit = await checkCanPublish(
+      session.userId,
+      user.plan as UserPlan
+    );
+    if (publishLimit && !scheduledAt) {
+      return NextResponse.json(publishLimit, { status: 403 });
     }
 
     const accounts = await db
@@ -147,10 +161,23 @@ export async function POST(request: NextRequest) {
         distRecords.map(async (dist) => {
           const account = targetAccounts.find((a) => a.id === dist.accountId)!;
           const result = await publishToPlatform(
-            dist.platform as PlatformId,
-            account.accountName,
+            {
+              id: account.id,
+              platform: account.platform as PlatformId,
+              accountName: account.accountName,
+              accessToken: account.accessToken,
+              refreshToken: account.refreshToken,
+              accountId: account.accountId,
+            },
             mediaUrl,
-            caption || title
+            caption || title,
+            async (accessToken, refreshToken) => {
+              await db
+                .update(connectedAccounts)
+                .set({ accessToken, refreshToken })
+                .where(eq(connectedAccounts.id, account.id));
+            },
+            title
           );
 
           await db
@@ -162,6 +189,21 @@ export async function POST(request: NextRequest) {
               publishedAt: result.success ? new Date() : null,
             })
             .where(eq(distributions.id, dist.id));
+
+          if (result.success && result.metrics) {
+            await db.insert(postMetrics).values({
+              userId: session.userId,
+              distributionId: dist.id,
+              postId: post.id,
+              platform: account.platform,
+              views: result.metrics.views,
+              likes: result.metrics.likes,
+              comments: result.metrics.comments,
+              shares: result.metrics.shares,
+              saves: result.metrics.saves,
+              engagementRate: result.metrics.engagementRate,
+            });
+          }
         })
       );
 
@@ -174,6 +216,10 @@ export async function POST(request: NextRequest) {
         .update(users)
         .set({ videosPublished: user.videosPublished + 1 })
         .where(eq(users.id, session.userId));
+
+      fullSyncForUser(session.userId).catch((err) =>
+        console.error("Post-publish analytics sync failed:", err)
+      );
     }
 
     return NextResponse.json({ post, success: true });

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { PLATFORMS } from "@/lib/constants";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Button } from "@/components/ui/button";
@@ -15,11 +16,24 @@ interface ConnectedAccount {
   connectedAt: string;
 }
 
-export default function AccountsPage() {
+const OAUTH_PLATFORMS = new Set([
+  "tiktok",
+  "youtube",
+  "instagram",
+  "facebook",
+  "linkedin",
+]);
+
+function AccountsContent() {
+  const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
   const [connecting, setConnecting] = useState<string | null>(null);
   const [accountName, setAccountName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [banner, setBanner] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   function loadAccounts() {
     fetch("/api/accounts")
@@ -33,6 +47,61 @@ export default function AccountsPage() {
   useEffect(() => {
     loadAccounts();
   }, []);
+
+  useEffect(() => {
+    const connected = searchParams.get("connected");
+    const error = searchParams.get("error");
+
+    if (connected === "tiktok") {
+      setBanner({
+        type: "success",
+        message: "TikTok account connected successfully.",
+      });
+    } else if (connected) {
+      const name =
+        PLATFORMS.find((p) => p.id === connected)?.name ?? connected;
+      setBanner({
+        type: "success",
+        message: `${name} account connected successfully.`,
+      });
+    } else if (error) {
+      const messages: Record<string, string> = {
+        tiktok_config:
+          "TikTok is not configured. Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET.",
+        youtube_config:
+          "YouTube is not configured. Add YOUTUBE_CLIENT_ID and YOUTUBE_CLIENT_SECRET.",
+        instagram_config:
+          "Instagram is not configured. Add INSTAGRAM_CLIENT_ID and INSTAGRAM_CLIENT_SECRET.",
+        facebook_config:
+          "Facebook is not configured. Add FACEBOOK_CLIENT_ID and FACEBOOK_CLIENT_SECRET.",
+        linkedin_config:
+          "LinkedIn is not configured. Add LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET.",
+        tiktok_oauth_failed: "TikTok authorization failed. Please try again.",
+        youtube_oauth_failed: "YouTube authorization failed. Please try again.",
+        instagram_oauth_failed:
+          "Instagram authorization failed. Please try again.",
+        facebook_oauth_failed: "Facebook authorization failed. Please try again.",
+        facebook_no_pages:
+          "No Facebook Pages found. Create a Page and try again.",
+        linkedin_oauth_failed: "LinkedIn authorization failed. Please try again.",
+        invalid_state: "Invalid OAuth state. Please try connecting again.",
+        plan_limit_platforms:
+          "Platform limit reached for your plan. Upgrade to connect more.",
+      };
+      setBanner({
+        type: "error",
+        message: messages[error] ?? `Connection error: ${error}`,
+      });
+    }
+  }, [searchParams]);
+
+  function startConnect(platformId: string) {
+    if (OAUTH_PLATFORMS.has(platformId)) {
+      window.location.href = `/api/connect/${platformId}`;
+      return;
+    }
+    setConnecting(platformId);
+  }
 
   async function connectPlatform(platformId: string) {
     if (!accountName.trim()) return;
@@ -71,15 +140,26 @@ export default function AccountsPage() {
         Connect your social media accounts to enable cross-platform distribution.
       </p>
 
-      {connecting && (
+      {banner && (
+        <div
+          className={cn(
+            "mb-6 p-4 rounded-xl text-sm border",
+            banner.type === "success"
+              ? "bg-green-50 text-green-800 border-green-100"
+              : "bg-red-50 text-red-800 border-red-100"
+          )}
+        >
+          {banner.message}
+        </div>
+      )}
+
+      {connecting && !OAUTH_PLATFORMS.has(connecting) && (
         <div className="mb-6 bg-white rounded-2xl p-6 border border-gray-100">
           <h3 className="font-medium text-gray-900 mb-3">
-            Connect{" "}
-            {PLATFORMS.find((p) => p.id === connecting)?.name}
+            Connect {PLATFORMS.find((p) => p.id === connecting)?.name}
           </h3>
           <p className="text-sm text-gray-500 mb-4">
-            Enter your account username. In production, this would use OAuth to
-            securely connect your account.
+            Enter your account username (demo mode for this platform).
           </p>
           <div className="flex gap-3">
             <input
@@ -89,9 +169,7 @@ export default function AccountsPage() {
               placeholder="@yourusername"
               className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
-            <Button onClick={() => connectPlatform(connecting)}>
-              Connect
-            </Button>
+            <Button onClick={() => connectPlatform(connecting)}>Connect</Button>
             <Button
               variant="ghost"
               onClick={() => {
@@ -109,6 +187,7 @@ export default function AccountsPage() {
         {PLATFORMS.map((platform) => {
           const connected = accounts.filter((a) => a.platform === platform.id);
           const isConnected = connected.length > 0;
+          const usesOAuth = OAUTH_PLATFORMS.has(platform.id);
 
           return (
             <div
@@ -128,18 +207,19 @@ export default function AccountsPage() {
                         <Check size={12} /> {connected.length} connected
                       </p>
                     )}
+                    {usesOAuth && !isConnected && (
+                      <p className="text-xs text-gray-400">OAuth</p>
+                    )}
                   </div>
                 </div>
-                {!isConnected && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setConnecting(platform.id)}
-                  >
-                    <Plus size={14} className="mr-1" />
-                    Connect
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => startConnect(platform.id)}
+                >
+                  <Plus size={14} className="mr-1" />
+                  Connect
+                </Button>
               </div>
 
               {connected.map((account) => (
@@ -158,15 +238,6 @@ export default function AccountsPage() {
                   </button>
                 </div>
               ))}
-
-              {isConnected && (
-                <button
-                  onClick={() => setConnecting(platform.id)}
-                  className="text-xs text-brand-600 hover:underline mt-2"
-                >
-                  + Add another account
-                </button>
-              )}
             </div>
           );
         })}
@@ -174,9 +245,20 @@ export default function AccountsPage() {
 
       {!loading && accounts.length === 0 && (
         <div className="text-center py-12 text-gray-500">
-          <p>No accounts connected yet. Click &quot;Connect&quot; on any platform above.</p>
+          <p>
+            No accounts connected yet. Click &quot;Connect&quot; on any platform
+            above.
+          </p>
         </div>
       )}
     </div>
+  );
+}
+
+export default function AccountsPage() {
+  return (
+    <Suspense fallback={<div className="text-gray-500">Loading...</div>}>
+      <AccountsContent />
+    </Suspense>
   );
 }

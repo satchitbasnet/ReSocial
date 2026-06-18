@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
+import { z } from "zod";
 import { getSession } from "@/lib/auth";
+import {
+  buildObjectKey,
+  createPresignedUploadUrl,
+  isAllowedMimeType,
+  isR2Configured,
+  MAX_UPLOAD_BYTES,
+  mimeToExtension,
+} from "@/lib/r2";
+
+const uploadRequestSchema = z.object({
+  filename: z.string().min(1),
+  contentType: z.string().min(1),
+  contentLength: z.number().int().positive(),
+});
 
 export async function POST(request: NextRequest) {
   const session = await getSession();
@@ -9,46 +22,61 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (!isR2Configured()) {
+    return NextResponse.json(
+      { error: "Media storage is not configured. Set R2 environment variables." },
+      { status: 503 }
+    );
+  }
+
   try {
-    const formData = await request.formData();
-    const file = formData.get("file") as File | null;
-
-    if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    const body = await request.json();
+    const parsed = uploadRequestSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const allowedTypes = ["video/mp4", "video/quicktime", "video/webm", "image/jpeg", "image/png"];
-    if (!allowedTypes.includes(file.type)) {
+    const { contentType, contentLength } = parsed.data;
+
+    if (!isAllowedMimeType(contentType)) {
       return NextResponse.json(
-        { error: "Unsupported file type. Use MP4, MOV, WebM, JPEG, or PNG." },
+        {
+          error:
+            "Unsupported file type. Use MP4, MOV, WebM, JPEG, PNG, or GIF.",
+        },
         { status: 400 }
       );
     }
 
-    const maxSize = 100 * 1024 * 1024; // 100MB
-    if (file.size > maxSize) {
+    if (contentLength > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: "File too large. Maximum size is 100MB." },
+        { error: "File too large. Maximum size is 500MB." },
         { status: 400 }
       );
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const ext = mimeToExtension(contentType);
+    const key = buildObjectKey(session.userId, ext);
+    const { uploadUrl, publicUrl } = await createPresignedUploadUrl(
+      key,
+      contentType,
+      contentLength
+    );
 
-    const ext = file.name.split(".").pop() || "mp4";
-    const filename = `${session.userId}_${Date.now()}.${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
+    const mediaType = contentType.startsWith("video/") ? "video" : "image";
 
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, filename), buffer);
-
-    const mediaUrl = `/uploads/${filename}`;
-    const mediaType = file.type.startsWith("video/") ? "video" : "image";
-
-    return NextResponse.json({ mediaUrl, mediaType, filename });
+    return NextResponse.json({
+      uploadUrl,
+      mediaUrl: publicUrl,
+      key,
+      mediaType,
+      contentType,
+    });
   } catch (error) {
-    console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
+    console.error("Presigned upload error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate upload URL" },
+      { status: 500 }
+    );
   }
 }

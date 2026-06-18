@@ -209,6 +209,13 @@ export interface AnalyticsSummary {
   postsPublished: number;
 }
 
+export interface SummaryChange {
+  totalViews: number;
+  engagementRate: number;
+  newFollowers: number;
+  postsPublished: number;
+}
+
 export interface PlatformViews {
   platform: string;
   views: number;
@@ -222,6 +229,8 @@ export interface TopPost {
   views: number;
   engagementRate: number;
   likes: number;
+  mediaUrl?: string;
+  publishedAt?: string;
 }
 
 export interface BestTimeSlot {
@@ -234,6 +243,8 @@ export interface BestTimeSlot {
 
 export interface AnalyticsDashboard {
   summary: AnalyticsSummary;
+  previousSummary: AnalyticsSummary;
+  summaryChange: SummaryChange;
   viewsByPlatform: PlatformViews[];
   topPosts: TopPost[];
   bestTimeToPost: BestTimeSlot[];
@@ -241,37 +252,49 @@ export interface AnalyticsDashboard {
   lastSyncedAt: string | null;
 }
 
-export async function getAnalyticsDashboard(
+function pctChange(current: number, previous: number): number {
+  if (previous === 0) return current > 0 ? 100 : 0;
+  return Math.round(((current - previous) / previous) * 1000) / 10;
+}
+
+function rangeToDays(range: AnalyticsRange): number {
+  return range === "7d" ? 7 : range === "30d" ? 30 : 90;
+}
+
+async function computeSummaryForRange(
   userId: string,
-  range: AnalyticsRange
-): Promise<AnalyticsDashboard> {
+  since: Date,
+  until?: Date
+): Promise<AnalyticsSummary> {
   const db = getDb();
-  const since = rangeToDate(range);
-
-  const metricCount = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(postMetrics)
-    .where(eq(postMetrics.userId, userId));
-
-  if ((metricCount[0]?.count ?? 0) === 0) {
-    await syncAnalyticsForUser(userId);
-  }
 
   const metrics = await db
     .select()
     .from(postMetrics)
     .where(
-      and(eq(postMetrics.userId, userId), gte(postMetrics.syncedAt, since))
+      until
+        ? and(
+            eq(postMetrics.userId, userId),
+            gte(postMetrics.syncedAt, since),
+            sql`${postMetrics.syncedAt} < ${until}`
+          )
+        : and(eq(postMetrics.userId, userId), gte(postMetrics.syncedAt, since))
     );
 
   const dailyStats = await db
     .select()
     .from(platformDailyStats)
     .where(
-      and(
-        eq(platformDailyStats.userId, userId),
-        gte(platformDailyStats.statDate, since)
-      )
+      until
+        ? and(
+            eq(platformDailyStats.userId, userId),
+            gte(platformDailyStats.statDate, since),
+            sql`${platformDailyStats.statDate} < ${until}`
+          )
+        : and(
+            eq(platformDailyStats.userId, userId),
+            gte(platformDailyStats.statDate, since)
+          )
     );
 
   const totalViews = metrics.reduce((s, m) => s + m.views, 0);
@@ -283,8 +306,64 @@ export async function getAnalyticsDashboard(
     totalViews > 0
       ? Math.round((totalEngagements / totalViews) * 10000) / 100
       : 0;
-  const newFollowers = dailyStats.reduce((s, d) => s + d.newFollowers, 0);
-  const postsPublished = metrics.length;
+
+  return {
+    totalViews,
+    engagementRate,
+    newFollowers: dailyStats.reduce((s, d) => s + d.newFollowers, 0),
+    postsPublished: metrics.length,
+  };
+}
+
+export async function getAnalyticsDashboard(
+  userId: string,
+  range: AnalyticsRange
+): Promise<AnalyticsDashboard> {
+  const db = getDb();
+  const since = rangeToDate(range);
+  const days = rangeToDays(range);
+  const previousUntil = new Date(since);
+  const previousSince = new Date(since);
+  previousSince.setDate(previousSince.getDate() - days);
+
+  const metricCount = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(postMetrics)
+    .where(eq(postMetrics.userId, userId));
+
+  if ((metricCount[0]?.count ?? 0) === 0) {
+    await syncAnalyticsForUser(userId);
+  }
+
+  const summary = await computeSummaryForRange(userId, since);
+  const previousSummary = await computeSummaryForRange(
+    userId,
+    previousSince,
+    previousUntil
+  );
+
+  const summaryChange: SummaryChange = {
+    totalViews: pctChange(summary.totalViews, previousSummary.totalViews),
+    engagementRate: pctChange(
+      summary.engagementRate,
+      previousSummary.engagementRate
+    ),
+    newFollowers: pctChange(
+      summary.newFollowers,
+      previousSummary.newFollowers
+    ),
+    postsPublished: pctChange(
+      summary.postsPublished,
+      previousSummary.postsPublished
+    ),
+  };
+
+  const metrics = await db
+    .select()
+    .from(postMetrics)
+    .where(
+      and(eq(postMetrics.userId, userId), gte(postMetrics.syncedAt, since))
+    );
 
   const platformViewsMap = new Map<string, number>();
   for (const m of metrics) {
@@ -293,6 +372,8 @@ export async function getAnalyticsDashboard(
       (platformViewsMap.get(m.platform) ?? 0) + m.views
     );
   }
+
+  const totalViews = summary.totalViews;
 
   const viewsByPlatform: PlatformViews[] = Array.from(
     platformViewsMap.entries()
@@ -306,19 +387,48 @@ export async function getAnalyticsDashboard(
     .sort((a, b) => b.views - a.views);
 
   const postIds = [...new Set(metrics.map((m) => m.postId))];
-  const postTitles =
+  const postRows =
     postIds.length > 0
       ? await db
-          .select({ id: posts.id, title: posts.title })
+          .select({
+            id: posts.id,
+            title: posts.title,
+            mediaUrl: posts.mediaUrl,
+          })
           .from(posts)
           .where(inArray(posts.id, postIds))
       : [];
 
-  const titleMap = new Map(postTitles.map((p) => [p.id, p.title]));
+  const titleMap = new Map(postRows.map((p) => [p.id, p.title]));
+  const mediaMap = new Map(postRows.map((p) => [p.id, p.mediaUrl]));
+
+  const distRows =
+    postIds.length > 0
+      ? await db
+          .select({
+            postId: distributions.postId,
+            platform: distributions.platform,
+            publishedAt: distributions.publishedAt,
+          })
+          .from(distributions)
+          .where(
+            and(
+              inArray(distributions.postId, postIds),
+              eq(distributions.status, "published")
+            )
+          )
+      : [];
+
+  const publishedMap = new Map<string, Date | null>();
+  for (const d of distRows) {
+    if (!publishedMap.has(`${d.postId}:${d.platform}`)) {
+      publishedMap.set(`${d.postId}:${d.platform}`, d.publishedAt);
+    }
+  }
 
   const topPosts: TopPost[] = [...metrics]
     .sort((a, b) => b.views - a.views)
-    .slice(0, 10)
+    .slice(0, 5)
     .map((m) => ({
       postId: m.postId,
       title: titleMap.get(m.postId) ?? "Untitled",
@@ -326,6 +436,10 @@ export async function getAnalyticsDashboard(
       views: m.views,
       engagementRate: m.engagementRate / 100,
       likes: m.likes,
+      mediaUrl: mediaMap.get(m.postId),
+      publishedAt:
+        publishedMap.get(`${m.postId}:${m.platform}`)?.toISOString() ??
+        m.syncedAt.toISOString(),
     }));
 
   const insights = await db
@@ -355,12 +469,9 @@ export async function getAnalyticsDashboard(
     .limit(1);
 
   return {
-    summary: {
-      totalViews,
-      engagementRate,
-      newFollowers,
-      postsPublished,
-    },
+    summary,
+    previousSummary,
+    summaryChange,
     viewsByPlatform,
     topPosts,
     bestTimeToPost: Array.from(bestByPlatform.values()),
@@ -370,5 +481,5 @@ export async function getAnalyticsDashboard(
 }
 
 export function planHasBestTimeInsight(plan: string): boolean {
-  return ["creator", "pro", "agency", "starter"].includes(plan);
+  return ["pro", "agency"].includes(plan);
 }
