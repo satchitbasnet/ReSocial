@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: resocial
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_APP_URL
+        sync: false
