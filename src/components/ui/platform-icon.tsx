@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { PlatformId } from "@/lib/constants";
 
@@ -73,9 +74,13 @@ const icons: Record<
     </IconWrapper>
   ),
   snapchat: (size, className) => (
-    <IconWrapper size={size} className={className} label="Snapchat">
-      <path d="M12 2.5c-4.694 0-8.5 3.582-8.5 8 0 2.8 1.2 4.8 2.6 6.2l-.8 2.8 2.9-1.6c.9.4 1.9.6 2.8.6 4.694 0 8.5-3.582 8.5-8s-3.806-8-8.5-8zm0 2c3.59 0 6.5 2.69 6.5 6s-2.91 6-6.5 6c-.7 0-1.4-.1-2-.3l-2.3 1.3.6-2.2C7.4 14.3 6.5 12.5 6.5 10.5c0-3.31 2.91-6 6.5-6z" />
-    </IconWrapper>
+    <Image
+      src="/icons/snapchat.png"
+      alt="Snapchat"
+      width={size}
+      height={size}
+      className={cn("shrink-0 rounded-md object-contain", className)}
+    />
   ),
 };
 

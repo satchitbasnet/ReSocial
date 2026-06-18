@@ -99,6 +99,20 @@ export default async function DashboardPage() {
               </div>
             </Link>
             <Link
+              href="/dashboard/analytics"
+              className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-brand-200 hover:bg-brand-50/50 transition-all"
+            >
+              <div className="p-2 rounded-lg bg-brand-50 text-brand-600">
+                <BarChart3 size={20} />
+              </div>
+              <div>
+                <p className="font-medium text-gray-900">View Analytics</p>
+                <p className="text-xs text-gray-500">
+                  Track views, engagement, and best posting times
+                </p>
+              </div>
+            </Link>
+            <Link
               href="/dashboard/workflows"
               className="flex items-center gap-3 p-4 rounded-xl border border-gray-100 hover:border-brand-200 hover:bg-brand-50/50 transition-all"
             >

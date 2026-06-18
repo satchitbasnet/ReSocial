@@ -1,0 +1,73 @@
+// Prisma schema for ReSocial analytics (Supabase Postgres)
+// Maps 1:1 to supabase/migrations/20260317120000_analytics.sql
+// Use: npx prisma db push / prisma migrate dev
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model PostMetric {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  distributionId String   @unique @map("distribution_id") @db.Uuid
+  postId         String   @map("post_id") @db.Uuid
+  platform       String
+  views          Int      @default(0)
+  likes          Int      @default(0)
+  comments       Int      @default(0)
+  shares         Int      @default(0)
+  saves          Int      @default(0)
+  engagementRate Int      @default(0) @map("engagement_rate")
+  syncedAt       DateTime @default(now()) @map("synced_at") @db.Timestamptz
+
+  @@index([userId])
+  @@index([userId, platform])
+  @@map("post_metrics")
+}
+
+model PlatformDailyStat {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  platform       String
+  statDate       DateTime @map("stat_date") @db.Date
+  views          Int      @default(0)
+  engagements    Int      @default(0)
+  postsPublished Int      @default(0) @map("posts_published")
+  newFollowers   Int      @default(0) @map("new_followers")
+
+  @@unique([userId, platform, statDate])
+  @@index([userId, statDate])
+  @@map("platform_daily_stats")
+}
+
+model FollowerSnapshot {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId        String   @map("user_id") @db.Uuid
+  accountId     String   @map("account_id") @db.Uuid
+  platform      String
+  followerCount Int      @map("follower_count")
+  recordedAt    DateTime @default(now()) @map("recorded_at") @db.Timestamptz
+
+  @@index([userId, recordedAt])
+  @@map("follower_snapshots")
+}
+
+model PostingTimeInsight {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  platform          String
+  dayOfWeek         Int      @map("day_of_week")
+  hourOfDay         Int      @map("hour_of_day")
+  avgEngagementRate Int      @default(0) @map("avg_engagement_rate")
+  sampleSize        Int      @default(0) @map("sample_size")
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz
+
+  @@unique([userId, platform, dayOfWeek, hourOfDay])
+  @@index([userId, platform])
+  @@map("posting_time_insights")
+}
