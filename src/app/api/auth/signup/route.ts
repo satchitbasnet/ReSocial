@@ -4,11 +4,13 @@ import { z } from "zod";
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { createSession, hashPassword } from "@/lib/auth";
+import { recordReferralOnSignup } from "@/lib/affiliate";
 
 const signupSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   password: z.string().min(8),
+  referralCode: z.string().min(4).max(32).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -19,7 +21,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { name, email, password } = parsed.data;
+    const { name, email, password, referralCode } = parsed.data;
     const db = getDb();
 
     const existing = await db
@@ -49,6 +51,10 @@ export async function POST(request: NextRequest) {
         trialEndsAt,
       })
       .returning();
+
+    if (referralCode) {
+      await recordReferralOnSignup(referralCode, user.id);
+    }
 
     await createSession({
       userId: user.id,

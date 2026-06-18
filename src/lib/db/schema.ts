@@ -34,6 +34,10 @@ export const distributionStatusEnum = pgEnum("distribution_status", [
   "published",
   "failed",
 ]);
+export const referralStatusEnum = pgEnum("referral_status", [
+  "pending",
+  "converted",
+]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -56,6 +60,20 @@ export const connectedAccounts = pgTable("connected_accounts", {
   accountId: text("account_id"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
+  isActive: boolean("is_active").default(true).notNull(),
+  connectedAt: timestamp("connected_at").defaultNow().notNull(),
+});
+
+export const driveConnections = pgTable("drive_connections", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  accountEmail: text("account_email").notNull(),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  folderId: text("folder_id"),
   isActive: boolean("is_active").default(true).notNull(),
   connectedAt: timestamp("connected_at").defaultNow().notNull(),
 });
@@ -104,10 +122,12 @@ export const distributions = pgTable("distributions", {
   publishedAt: timestamp("published_at"),
 });
 
-export const usersRelations = relations(users, ({ many }) => ({
+export const usersRelations = relations(users, ({ many, one }) => ({
   connectedAccounts: many(connectedAccounts),
   workflows: many(workflows),
   posts: many(posts),
+  driveConnection: one(driveConnections),
+  affiliate: one(affiliates),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -191,13 +211,43 @@ export const postingTimeInsights = pgTable("posting_time_insights", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const affiliates = pgTable("affiliates", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  referralCode: text("referral_code").notNull().unique(),
+  totalReferrals: integer("total_referrals").default(0).notNull(),
+  totalEarnings: integer("total_earnings").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const referrals = pgTable("referrals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  affiliateId: uuid("affiliate_id")
+    .notNull()
+    .references(() => affiliates.id, { onDelete: "cascade" }),
+  referredUserId: uuid("referred_user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" })
+    .unique(),
+  status: referralStatusEnum("status").default("pending").notNull(),
+  commission: integer("commission").default(0).notNull(),
+  monthsCredited: integer("months_credited").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export type PostMetrics = typeof postMetrics.$inferSelect;
 export type PlatformDailyStats = typeof platformDailyStats.$inferSelect;
 export type FollowerSnapshot = typeof followerSnapshots.$inferSelect;
 export type PostingTimeInsight = typeof postingTimeInsights.$inferSelect;
+export type Affiliate = typeof affiliates.$inferSelect;
+export type Referral = typeof referrals.$inferSelect;
 
 export type User = typeof users.$inferSelect;
 export type ConnectedAccount = typeof connectedAccounts.$inferSelect;
+export type DriveConnection = typeof driveConnections.$inferSelect;
 export type Workflow = typeof workflows.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type Distribution = typeof distributions.$inferSelect;

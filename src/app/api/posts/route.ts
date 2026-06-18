@@ -13,7 +13,17 @@ import {
 import { publishToPlatform } from "@/lib/platforms/publisher";
 import type { PlatformId } from "@/lib/constants";
 import { checkCanPublish, type UserPlan } from "@/lib/plans";
-import { fullSyncForUser } from "@/lib/analytics/sync";
+import { fullSyncForUser, syncPostMetrics } from "@/lib/analytics/sync";
+import {
+  clearMediaProcessCache,
+  prepareMediaForPublish,
+} from "@/lib/media/processor";
+import { resolveWorkflowForPublish } from "@/lib/media/workflow";
+import {
+  backupToGoogleDrive,
+  extensionFromMediaUrl,
+  sanitizeBackupFilename,
+} from "@/lib/integrations/google-drive";
 
 const createPostSchema = z.object({
   title: z.string().min(1),
@@ -21,6 +31,7 @@ const createPostSchema = z.object({
   mediaUrl: z.string().min(1),
   mediaType: z.string().default("video"),
   platformIds: z.array(z.string()).min(1),
+  workflowId: z.string().uuid().optional(),
   scheduledAt: z.string().optional(),
 });
 
@@ -81,7 +92,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { title, caption, mediaUrl, mediaType, platformIds, scheduledAt } =
+    const { title, caption, mediaUrl, mediaType, platformIds, workflowId, scheduledAt } =
       parsed.data;
 
     const db = getDb();
@@ -130,10 +141,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const workflow = await resolveWorkflowForPublish(
+      db,
+      session.userId,
+      platformIds,
+      workflowId
+    );
+
     const [post] = await db
       .insert(posts)
       .values({
         userId: session.userId,
+        workflowId: workflow?.id ?? workflowId ?? null,
         title,
         caption: caption || "",
         mediaUrl,
@@ -157,9 +176,54 @@ export async function POST(request: NextRequest) {
 
     // Publish asynchronously
     if (!scheduledAt) {
+      clearMediaProcessCache();
+
+      const processOptions =
+        workflow &&
+        (workflow.autoResize || workflow.removeWatermark) &&
+        mediaType === "video"
+          ? {
+              autoResize: workflow.autoResize,
+              removeWatermark: workflow.removeWatermark,
+              sourcePlatform: workflow.sourcePlatform as PlatformId | null,
+              mediaType,
+            }
+          : null;
+
+      let publishSucceeded = false;
+
       await Promise.all(
         distRecords.map(async (dist) => {
           const account = targetAccounts.find((a) => a.id === dist.accountId)!;
+
+          let publishMediaUrl = mediaUrl;
+          if (processOptions) {
+            try {
+              publishMediaUrl = await prepareMediaForPublish(
+                mediaUrl,
+                account.platform as PlatformId,
+                session.userId,
+                processOptions
+              );
+            } catch (procErr) {
+              console.error(
+                `[ReSocial] Media processing failed for ${account.platform}:`,
+                procErr
+              );
+              await db
+                .update(distributions)
+                .set({
+                  status: "failed",
+                  errorMessage:
+                    procErr instanceof Error
+                      ? procErr.message
+                      : "Media processing failed",
+                })
+                .where(eq(distributions.id, dist.id));
+              return;
+            }
+          }
+
           const result = await publishToPlatform(
             {
               id: account.id,
@@ -169,7 +233,7 @@ export async function POST(request: NextRequest) {
               refreshToken: account.refreshToken,
               accountId: account.accountId,
             },
-            mediaUrl,
+            publishMediaUrl,
             caption || title,
             async (accessToken, refreshToken) => {
               await db
@@ -190,6 +254,10 @@ export async function POST(request: NextRequest) {
             })
             .where(eq(distributions.id, dist.id));
 
+          if (result.success) {
+            publishSucceeded = true;
+          }
+
           if (result.success && result.metrics) {
             await db.insert(postMetrics).values({
               userId: session.userId,
@@ -203,6 +271,13 @@ export async function POST(request: NextRequest) {
               saves: result.metrics.saves,
               engagementRate: result.metrics.engagementRate,
             });
+          } else if (
+            result.success &&
+            (account.platform === "youtube" || account.platform === "instagram")
+          ) {
+            syncPostMetrics(dist.id).catch((err) =>
+              console.error(`${account.platform} metrics sync failed:`, err)
+            );
           }
         })
       );
@@ -220,6 +295,14 @@ export async function POST(request: NextRequest) {
       fullSyncForUser(session.userId).catch((err) =>
         console.error("Post-publish analytics sync failed:", err)
       );
+
+      if (publishSucceeded) {
+        const ext = extensionFromMediaUrl(mediaUrl);
+        const backupName = `${sanitizeBackupFilename(title)}.${ext}`;
+        backupToGoogleDrive(session.userId, mediaUrl, backupName).catch((err) =>
+          console.error("Google Drive backup failed:", err)
+        );
+      }
     }
 
     return NextResponse.json({ post, success: true });

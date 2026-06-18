@@ -67,6 +67,7 @@ export async function GET(request: NextRequest) {
         .set({
           accountName: account.displayName,
           accessToken: tokens.accessToken,
+          refreshToken: account.pageAccessToken,
           isActive: true,
         })
         .where(eq(connectedAccounts.id, existing.id));
@@ -80,6 +81,7 @@ export async function GET(request: NextRequest) {
           accountName: account.displayName,
           accountId: compositeId,
           accessToken: tokens.accessToken,
+          refreshToken: account.pageAccessToken,
           isActive: true,
         })
         .returning({ id: connectedAccounts.id });

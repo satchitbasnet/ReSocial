@@ -10,6 +10,7 @@ import {
   Workflow,
   BarChart3,
   Settings,
+  Gift,
   LogOut,
   Menu,
   X,
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/dashboard/accounts", label: "Connected Accounts", icon: Link2 },
   { href: "/dashboard/workflows", label: "Workflows", icon: Workflow },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/affiliate", label: "Affiliate", icon: Gift },
   { href: "/dashboard/history", label: "Post History", icon: History },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
 ];

@@ -1,18 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 
-export default function SignupPage() {
+const REFERRAL_STORAGE_KEY = "resocial_referral_code";
+
+function SignupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      const code = ref.trim().toUpperCase();
+      setReferralCode(code);
+      sessionStorage.setItem(REFERRAL_STORAGE_KEY, code);
+    } else {
+      const stored = sessionStorage.getItem(REFERRAL_STORAGE_KEY);
+      if (stored) setReferralCode(stored);
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -23,13 +39,19 @@ export default function SignupPage() {
       const res = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          ...(referralCode ? { referralCode } : {}),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Signup failed");
         return;
       }
+      sessionStorage.removeItem(REFERRAL_STORAGE_KEY);
       router.push("/dashboard");
       router.refresh();
     } catch {
@@ -90,6 +112,12 @@ export default function SignupPage() {
               Log in
             </Link>
           </p>
+
+          {referralCode && (
+            <div className="mb-6 bg-brand-50 text-brand-800 text-sm p-3 rounded-xl border border-brand-100">
+              Referred by code <span className="font-mono font-medium">{referralCode}</span>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
@@ -152,5 +180,13 @@ export default function SignupPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <SignupForm />
+    </Suspense>
   );
 }

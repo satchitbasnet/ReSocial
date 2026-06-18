@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { getStripe, planFromPriceId } from "@/lib/stripe";
 import type { UserPlan } from "@/lib/plans";
+import { creditAffiliateCommission } from "@/lib/affiliate";
 
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
@@ -42,6 +43,36 @@ export async function POST(request: NextRequest) {
           .update(users)
           .set({ plan })
           .where(eq(users.id, userId));
+      }
+    }
+
+    if (event.type === "invoice.payment_succeeded") {
+      const invoice = event.data.object as Stripe.Invoice;
+      const invoiceWithSub = invoice as Stripe.Invoice & {
+        subscription?: string | Stripe.Subscription | null;
+      };
+      let userId = invoice.metadata?.userId;
+
+      if (!userId && invoiceWithSub.subscription) {
+        const subId =
+          typeof invoiceWithSub.subscription === "string"
+            ? invoiceWithSub.subscription
+            : invoiceWithSub.subscription.id;
+        const sub = await stripe.subscriptions.retrieve(subId);
+        userId = sub.metadata?.userId;
+      }
+
+      if (!userId && invoice.customer_email) {
+        const [user] = await db
+          .select({ id: users.id })
+          .from(users)
+          .where(eq(users.email, invoice.customer_email.toLowerCase()))
+          .limit(1);
+        userId = user?.id;
+      }
+
+      if (userId && invoice.amount_paid > 0) {
+        await creditAffiliateCommission(userId, invoice.amount_paid);
       }
     }
 

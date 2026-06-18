@@ -22,6 +22,9 @@ export interface InstagramAccountInfo {
   pageId: string;
   displayName: string;
   followerCount: number;
+  pageAccessToken: string;
+  reach?: number;
+  impressions?: number;
 }
 
 export interface InstagramVideoStats {
@@ -154,11 +157,35 @@ export async function fetchInstagramAccountInfo(
     pageId: page.id,
     displayName: profile.username || page.name,
     followerCount: profile.followers_count ?? 0,
+    pageAccessToken: page.access_token,
+    ...(await fetchInstagramAccountInsights(igUserId, page.access_token)),
   };
 }
 
+/** Account-level insights: reach, impressions, follower count (last 24h). */
+export async function fetchInstagramAccountInsights(
+  igUserId: string,
+  pageAccessToken: string
+): Promise<{ reach: number; impressions: number }> {
+  try {
+    const insights = await graphGet<{
+      data: Array<{ name: string; values: Array<{ value: number }> }>;
+    }>(
+      `/${igUserId}/insights?metric=reach,impressions&period=day`,
+      pageAccessToken
+    );
+
+    const get = (name: string) =>
+      insights.data?.find((m) => m.name === name)?.values?.[0]?.value ?? 0;
+
+    return { reach: get("reach"), impressions: get("impressions") };
+  } catch {
+    return { reach: 0, impressions: 0 };
+  }
+}
+
 export async function fetchInstagramMediaStats(
-  accessToken: string,
+  _userAccessToken: string,
   mediaId: string,
   pageAccessToken: string
 ): Promise<InstagramVideoStats> {
@@ -166,14 +193,14 @@ export async function fetchInstagramMediaStats(
     const insights = await graphGet<{
       data: Array<{ name: string; values: Array<{ value: number }> }>;
     }>(
-      `/${mediaId}/insights?metric=reach,impressions,likes,comments,shares,saved`,
+      `/${mediaId}/insights?metric=reach,views,likes,comments,shares,saved`,
       pageAccessToken
     );
 
     const get = (name: string) =>
       insights.data?.find((m) => m.name === name)?.values?.[0]?.value ?? 0;
 
-    const views = get("impressions") || get("reach");
+    const views = get("views") || get("reach");
     const likes = get("likes");
     const comments = get("comments");
     const shares = get("shares");
@@ -201,6 +228,7 @@ export async function publishReelToInstagram(
     media_type: "REELS",
     video_url: mediaUrl,
     caption: caption.slice(0, 2200),
+    share_to_feed: true,
   });
 
   const creationId = container.id;
@@ -244,7 +272,7 @@ export async function publishReelToInstagram(
 async function graphPost<T>(
   path: string,
   accessToken: string,
-  data: Record<string, string>
+  data: Record<string, string | boolean>
 ): Promise<T> {
   const res = await fetch(`${GRAPH_BASE}${path}`, {
     method: "POST",
@@ -265,10 +293,17 @@ export async function publishVideoToInstagram(
   accessToken: string,
   accountId: string | null,
   mediaUrl: string,
-  caption: string
+  caption: string,
+  storedPageAccessToken?: string | null
 ): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
   if (!accountId) {
     throw new Error("Instagram account ID missing");
+  }
+
+  if (!mediaUrl.startsWith("https://")) {
+    throw new Error(
+      "Instagram requires a public HTTPS video URL. Upload media to R2 first."
+    );
   }
 
   const [igUserId, pageId] = accountId.split(":");
@@ -276,19 +311,24 @@ export async function publishVideoToInstagram(
     throw new Error("Invalid Instagram account ID format");
   }
 
-  const pages = await graphGet<{
-    data: Array<{ id: string; access_token: string }>;
-  }>("/me/accounts?fields=id,access_token", accessToken);
+  let pageAccessToken = storedPageAccessToken ?? null;
 
-  const page = pages.data?.find((p) => p.id === pageId);
-  if (!page) {
-    throw new Error("Facebook Page access lost. Reconnect Instagram.");
+  if (!pageAccessToken) {
+    const pages = await graphGet<{
+      data: Array<{ id: string; access_token: string }>;
+    }>("/me/accounts?fields=id,access_token", accessToken);
+
+    const page = pages.data?.find((p) => p.id === pageId);
+    if (!page) {
+      throw new Error("Facebook Page access lost. Reconnect Instagram.");
+    }
+    pageAccessToken = page.access_token;
   }
 
   return publishReelToInstagram(
     accessToken,
     igUserId,
-    page.access_token,
+    pageAccessToken,
     mediaUrl,
     caption
   );

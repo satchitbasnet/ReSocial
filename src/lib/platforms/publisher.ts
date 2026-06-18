@@ -127,7 +127,8 @@ export async function publishToPlatform(
         account.accessToken,
         account.accountId,
         mediaUrl,
-        caption
+        caption,
+        account.refreshToken
       );
       return { success: true, platformPostId, metrics: stats };
     } catch (err) {

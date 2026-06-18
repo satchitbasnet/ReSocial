@@ -288,26 +288,30 @@ export async function publishVideoToYouTube(
   caption: string,
   onTokenRefresh?: TokenRefreshHandler
 ): Promise<{ platformPostId: string; stats?: YouTubeVideoStats }> {
-  return withTokenRefresh(accessToken, refreshToken, onTokenRefresh, async (token) => {
-    const videoBuffer = await fetchMediaBuffer(mediaUrl);
-    if (videoBuffer.length === 0) {
-      throw new Error("Video file is empty");
+  const platformPostId = await withTokenRefresh(
+    accessToken,
+    refreshToken,
+    onTokenRefresh,
+    async (token) => {
+      const videoBuffer = await fetchMediaBuffer(mediaUrl);
+      if (videoBuffer.length === 0) {
+        throw new Error("Video file is empty");
+      }
+      return resumableUpload(token, videoBuffer, title, caption);
     }
+  );
 
-    const platformPostId = await resumableUpload(
-      token,
-      videoBuffer,
-      title,
-      caption
+  let stats: YouTubeVideoStats | undefined;
+  try {
+    stats = await withTokenRefresh(
+      accessToken,
+      refreshToken,
+      onTokenRefresh,
+      (token) => fetchYouTubeVideoStats(token, platformPostId)
     );
+  } catch {
+    // Stats may not be available immediately; analytics sync will retry
+  }
 
-    let stats: YouTubeVideoStats | undefined;
-    try {
-      stats = await fetchYouTubeVideoStats(token, platformPostId);
-    } catch {
-      // Stats may not be available immediately after upload
-    }
-
-    return { platformPostId, stats };
-  });
+  return { platformPostId, stats };
 }

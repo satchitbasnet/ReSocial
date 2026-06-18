@@ -73,16 +73,28 @@ export async function syncPostMetrics(distributionId: string): Promise<void> {
         metrics = await fetchYouTubeVideoStats(token, row.platformPostId);
       }
     } else if (row.platform === "instagram" && row.platformAccountId) {
-      const [, pageId] = row.platformAccountId.split(":");
-      const pages = await fetch(
-        `https://graph.facebook.com/v18.0/me/accounts?fields=id,access_token&access_token=${encodeURIComponent(row.accessToken)}`
-      ).then((r) => r.json() as Promise<{ data?: Array<{ id: string; access_token: string }> }>);
-      const page = pages.data?.find((p) => p.id === pageId);
-      if (page) {
+      const userToken = row.accessToken;
+      const pageToken =
+        row.refreshToken ??
+        (userToken
+          ? await (async () => {
+              const [, pageId] = row.platformAccountId!.split(":");
+              const pages = await fetch(
+                `https://graph.facebook.com/v18.0/me/accounts?fields=id,access_token&access_token=${encodeURIComponent(userToken)}`
+              ).then((r) =>
+                r.json() as Promise<{
+                  data?: Array<{ id: string; access_token: string }>;
+                }>
+              );
+              return pages.data?.find((p) => p.id === pageId)?.access_token;
+            })()
+          : undefined);
+
+      if (pageToken && userToken) {
         metrics = await fetchInstagramMediaStats(
-          row.accessToken,
+          userToken,
           row.platformPostId,
-          page.access_token
+          pageToken
         );
       }
     } else if (row.platform === "facebook" && row.platformAccountId) {
