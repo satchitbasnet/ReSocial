@@ -12,10 +12,10 @@ export default function PricingPage() {
       <main className="pt-24">
         <div className="text-center py-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Simple pricing to grow your social platforms
+            Simple Pricing to Grow Your Social Platforms
           </h1>
           <p className="text-gray-600 text-lg">
-            Publish 10 videos for FREE — No credit card required
+            Publish 10 Videos for FREE — No Credit Card Required
           </p>
         </div>
         <PricingSection />

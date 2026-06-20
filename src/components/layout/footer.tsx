@@ -39,7 +39,7 @@ export function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Account</h4>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/login" className="hover:text-white transition-colors">Log in</Link></li>
+              <li><Link href="/login" className="hover:text-white transition-colors">Log In</Link></li>
               <li><Link href="/signup" className="hover:text-white transition-colors">Start Free Trial</Link></li>
             </ul>
           </div>

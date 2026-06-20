@@ -17,7 +17,7 @@ export function ProcessingUsageBar({ usage }: ProcessingUsageBarProps) {
     <div className="mb-6 bg-white border border-gray-100 rounded-xl p-4">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm font-medium text-gray-900">
-          Processing usage this month
+          Processing Usage This Month
         </p>
         <p className="text-sm text-gray-600">
           {usage.used} / {usage.cap}
@@ -36,12 +36,12 @@ export function ProcessingUsageBar({ usage }: ProcessingUsageBarProps) {
         />
       </div>
       <p className="text-xs text-gray-500 mt-2">
-        Auto-resize and watermark removal. Resets{" "}
+        Auto-Resize and Watermark Removal. Resets{" "}
         {usage.periodEnd.toLocaleDateString("en-US", {
           month: "short",
           day: "numeric",
         })}
-        . Posting is always unlimited.
+        . Posting Is Always Unlimited.
       </p>
     </div>
   );

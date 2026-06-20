@@ -98,7 +98,7 @@ export default function BenchmarkingPage() {
         <p className="text-gray-600 mb-6">
           Compare your performance against competitors side-by-side. Available on Pro and Agency plans.
         </p>
-        <Button href="/pricing">Upgrade plan</Button>
+        <Button href="/pricing">Upgrade Plan</Button>
       </div>
     );
   }
@@ -138,7 +138,7 @@ export default function BenchmarkingPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-3">Add competitor</p>
+        <p className="text-sm font-medium text-gray-700 mb-3">Add Competitor</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             value={handle}
@@ -169,8 +169,8 @@ export default function BenchmarkingPage() {
             <tr className="text-left text-gray-500 border-b border-gray-100">
               <th className="px-4 py-3 font-medium">Account</th>
               <th className="px-4 py-3 font-medium text-right">Followers</th>
-              <th className="px-4 py-3 font-medium text-right">Avg views</th>
-              <th className="px-4 py-3 font-medium text-right">Avg engagement</th>
+              <th className="px-4 py-3 font-medium text-right">Avg Views</th>
+              <th className="px-4 py-3 font-medium text-right">Avg Engagement</th>
               <th className="px-4 py-3 font-medium text-right">Posts/mo</th>
               <th className="px-4 py-3 w-10" />
             </tr>
@@ -206,7 +206,7 @@ export default function BenchmarkingPage() {
           </tbody>
         </table>
         {competitors.length === 0 && (
-          <p className="text-center text-gray-500 text-sm py-8">Add competitors to compare.</p>
+          <p className="text-center text-gray-500 text-sm py-8">Add Competitors to Compare.</p>
         )}
       </div>
 

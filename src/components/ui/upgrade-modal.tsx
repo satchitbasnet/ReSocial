@@ -44,22 +44,22 @@ export function UpgradeModal({
         </div>
 
         <h2 className="text-xl font-bold text-gray-900 mb-2">
-          Upgrade to keep growing
+          Upgrade to Keep Growing
         </h2>
         <p className="text-gray-600 text-sm mb-1">
-          Current plan: <span className="font-medium capitalize">{currentPlan}</span>
+          Current Plan: <span className="font-medium capitalize">{currentPlan}</span>
         </p>
         <p className="text-gray-600 text-sm mb-6">{limitMessage}</p>
 
         <ul className="space-y-2 mb-6 text-sm text-gray-700">
           <li>✓ Unlimited posts on Pro</li>
-          <li>✓ All platforms + full analytics</li>
-          <li>✓ Best-time-to-post insights</li>
-          <li>✓ Follower growth tracking</li>
+          <li>✓ All Platforms + Full Analytics</li>
+          <li>✓ Best-Time-to-Post Insights</li>
+          <li>✓ Follower Growth Tracking</li>
         </ul>
 
         <Button href="/pricing" className="w-full" onClick={onClose}>
-          View plans — from $12/mo
+          View Plans — From $12/mo
         </Button>
       </div>
     </div>

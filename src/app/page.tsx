@@ -15,14 +15,14 @@ export default function HomePage() {
       <Navbar />
       <main>
         <Hero
-          title="The #1 automated content repurposing platform"
+          title="The #1 Automated Content Repurposing Platform"
           subtitle="Connect with all major social media platforms. Upload once and automatically post videos, stories, and audio across TikTok, YouTube, Instagram, Facebook, LinkedIn, X, and more."
         />
 
         <section className="py-16 border-y border-gray-100 bg-white">
           <div className="mx-auto max-w-7xl px-6 text-center">
             <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-8">
-              Trusted integration partners
+              Trusted Integration Partners
             </p>
             <PlatformLogos />
           </div>
@@ -33,7 +33,7 @@ export default function HomePage() {
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-3xl font-bold text-gray-900 mb-6">
-                  Make waves on social
+                  Make Waves on Social
                 </h2>
                 <div className="space-y-6">
                   <div className="flex gap-4">
@@ -42,10 +42,10 @@ export default function HomePage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        Save up to 20 hours per week
+                        Save Up to 20 Hours per Week
                       </p>
                       <p className="text-gray-600 text-sm mt-1">
-                        Automatic cross-platform posting eliminates manual uploads
+                        Automatic Cross-Platform Posting Eliminates Manual Uploads
                       </p>
                     </div>
                   </div>
@@ -55,10 +55,10 @@ export default function HomePage() {
                     </div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        Up to 50% more engagement
+                        Up to 50% More Engagement
                       </p>
                       <p className="text-gray-600 text-sm mt-1">
-                        Achieve 30% follower growth with omnipresence
+                        Achieve 30% Follower Growth With Omnipresence
                       </p>
                     </div>
                   </div>
@@ -67,7 +67,7 @@ export default function HomePage() {
               <div className="gradient-bg rounded-3xl p-8 text-white">
                 <div className="space-y-4">
                   <div className="bg-white/10 rounded-xl p-4 backdrop-blur">
-                    <p className="text-sm opacity-80">Upload once</p>
+                    <p className="text-sm opacity-80">Upload Once</p>
                     <p className="font-semibold">Your video → ReSocial</p>
                   </div>
                   <div className="flex justify-center">

@@ -64,7 +64,7 @@ export default function HistoryPage() {
 
       {posts.length === 0 ? (
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
-          <p className="text-gray-500 mb-4">No posts yet.</p>
+          <p className="text-gray-500 mb-4">No Posts Yet.</p>
           <a
             href="/dashboard/upload"
             className="text-brand-600 font-medium hover:underline"

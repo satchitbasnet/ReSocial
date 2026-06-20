@@ -136,7 +136,7 @@ export default function PostPerformancePage() {
           onChange={(e) => setPlatform(e.target.value)}
           className="text-sm rounded-xl border border-gray-200 px-3 py-2"
         >
-          <option value="all">All platforms</option>
+          <option value="all">All Platforms</option>
           {PLATFORMS.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}

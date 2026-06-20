@@ -35,7 +35,7 @@ export default function AgencyPage() {
       <main>
         <Hero
           badge="For Agencies"
-          title="Automate repurposing for every brand you manage"
+          title="Automate Repurposing for Every Brand You Manage"
           subtitle="Post content on one platform and let ReSocial automatically tailor and distribute it across all social media channels."
         />
 

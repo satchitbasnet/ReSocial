@@ -65,9 +65,9 @@ function formatViews(n: number): string {
 }
 
 const ranges: { value: Range; label: string }[] = [
-  { value: "7d", label: "7 days" },
-  { value: "30d", label: "30 days" },
-  { value: "90d", label: "90 days" },
+  { value: "7d", label: "7 Days" },
+  { value: "30d", label: "30 Days" },
+  { value: "90d", label: "90 Days" },
 ];
 
 export function AnalyticsDashboard() {
@@ -162,17 +162,17 @@ export function AnalyticsDashboard() {
         <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
           <BarChart3 size={48} className="mx-auto text-gray-300 mb-4" />
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
-            No analytics data yet
+            No Analytics Data Yet
           </h2>
           <p className="text-gray-600 text-sm mb-6 max-w-sm mx-auto">
-            Connect your social accounts and publish content to start tracking
-            views, engagement, and growth.
+            Connect Your Social Accounts and Publish Content to Start Tracking
+            Views, Engagement, and Growth.
           </p>
           <a
             href="/dashboard/accounts"
             className="inline-flex items-center px-5 py-2.5 rounded-full bg-brand-600 text-white text-sm font-medium hover:bg-brand-700"
           >
-            Connect accounts
+            Connect Accounts
           </a>
         </div>
       </div>
@@ -188,11 +188,11 @@ export function AnalyticsDashboard() {
             Analytics
           </h1>
           <p className="text-gray-600 mt-1 text-sm">
-            Performance across all connected platforms
+            Performance Across All Connected Platforms
             {data?.lastSyncedAt && (
               <span className="text-gray-400">
                 {" "}
-                · Last synced{" "}
+                · Last Synced{" "}
                 {new Date(data.lastSyncedAt).toLocaleString()}
               </span>
             )}
@@ -234,7 +234,7 @@ export function AnalyticsDashboard() {
         <StatCard
           label="Total Views"
           value={formatViews(summary.totalViews)}
-          sub={`vs previous ${range.replace("d", " days")}`}
+          sub={`Vs Previous ${range.replace("d", " Days")}`}
           icon={Eye}
           color="text-brand-600 bg-brand-50"
           changePercent={change?.totalViews}
@@ -250,7 +250,7 @@ export function AnalyticsDashboard() {
         <StatCard
           label="New Followers"
           value={formatViews(summary.newFollowers)}
-          sub="Across all platforms"
+          sub="Across All Platforms"
           icon={UserPlus}
           color="text-green-600 bg-green-50"
           changePercent={change?.newFollowers}
@@ -258,7 +258,7 @@ export function AnalyticsDashboard() {
         <StatCard
           label="Posts Published"
           value={summary.postsPublished.toString()}
-          sub="In selected period"
+          sub="In Selected Period"
           icon={FileVideo}
           color="text-purple-600 bg-purple-50"
           changePercent={change?.postsPublished}
@@ -287,7 +287,7 @@ export function AnalyticsDashboard() {
             href="/dashboard/analytics/posts"
             className="text-sm text-brand-600 font-medium hover:underline"
           >
-            View all posts →
+            View All Posts →
           </Link>
         </div>
         <TopPostsTable posts={data?.topPosts ?? []} />

@@ -224,7 +224,7 @@ export default function UploadPage() {
     <div className="max-w-3xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Upload & Publish</h1>
       <p className="text-gray-600 mb-8">
-        Upload your content once and distribute it to all connected platforms.
+        Upload Your Content Once and Distribute It to All Connected Platforms.
       </p>
 
       {error && (
@@ -236,11 +236,11 @@ export default function UploadPage() {
 
       {accounts.length === 0 && (
         <div className="mb-6 bg-amber-50 text-amber-800 text-sm p-4 rounded-xl border border-amber-100">
-          No accounts connected yet.{" "}
+          No Accounts Connected Yet.{" "}
           <a href="/dashboard/accounts" className="font-medium underline">
-            Connect your social accounts
+            Connect Your Social Accounts
           </a>{" "}
-          before publishing.
+          Before Publishing.
         </div>
       )}
 
@@ -472,7 +472,7 @@ export default function UploadPage() {
                   <Check size={14} className="text-brand-600" />
                 )}
                 {!connected && (
-                  <span className="text-[10px] text-gray-400">Not connected</span>
+                  <span className="text-[10px] text-gray-400">Not Connected</span>
                 )}
               </button>
             );

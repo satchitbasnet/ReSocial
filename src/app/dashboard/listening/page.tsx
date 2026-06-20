@@ -92,7 +92,7 @@ export default function ListeningPage() {
       </div>
 
       <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-3">Add hashtag</p>
+        <p className="text-sm font-medium text-gray-700 mb-3">Add Hashtag</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Hash size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -150,7 +150,7 @@ export default function ListeningPage() {
                       <p className="font-semibold">{tag.stats.postCount.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className="text-gray-500 text-xs">Avg engagement</p>
+                      <p className="text-gray-500 text-xs">Avg Engagement</p>
                       <p className="font-semibold">{tag.stats.avgEngagement.toLocaleString()}</p>
                     </div>
                     <div>

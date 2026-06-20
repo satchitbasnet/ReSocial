@@ -24,7 +24,7 @@ export function BestTimeToPost({ slots, locked }: BestTimeToPostProps) {
         <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-brand-50 text-brand-600 mb-4">
           <Clock size={24} />
         </div>
-        <p className="font-medium text-gray-900 mb-1">Best time to post</p>
+        <p className="font-medium text-gray-900 mb-1">Best Time to Post</p>
         <p className="text-sm text-gray-500 mb-4 max-w-xs mx-auto">
           Upgrade to Creator ($12/mo) to unlock posting time insights based on
           your historical engagement.
@@ -33,7 +33,7 @@ export function BestTimeToPost({ slots, locked }: BestTimeToPostProps) {
           href="/pricing"
           className="text-sm font-medium text-brand-600 hover:underline"
         >
-          View plans →
+          View Plans →
         </a>
       </div>
     );

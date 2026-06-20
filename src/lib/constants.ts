@@ -29,7 +29,7 @@ export const PLANS = {
     dailyPrice: 0,
     accountsPerPlatform: 1,
     videosPerMonth: 10,
-    description: "14-day trial, 10 videos free",
+    description: "14-Day Trial, 10 Videos Free",
   },
   starter: {
     name: "Starter",
@@ -39,7 +39,7 @@ export const PLANS = {
     yearlyDailyPrice: 0.97,
     accountsPerPlatform: 3,
     videosPerMonth: 5000,
-    description: "Perfect for solo creators and small businesses",
+    description: "Perfect for Solo Creators and Small Businesses",
   },
   pro: {
     name: "Pro",
@@ -49,7 +49,7 @@ export const PLANS = {
     yearlyDailyPrice: 2.19,
     accountsPerPlatform: 10,
     videosPerMonth: Infinity,
-    description: "Best for growing teams and multiple brands",
+    description: "Best for Growing Teams and Multiple Brands",
   },
   agency: {
     name: "Agency",
@@ -59,7 +59,7 @@ export const PLANS = {
     yearlyDailyPrice: 4.97,
     accountsPerPlatform: 25,
     videosPerMonth: Infinity,
-    description: "Designed for agencies managing multiple clients",
+    description: "Designed for Agencies Managing Multiple Clients",
   },
 } as const;
 
@@ -73,31 +73,31 @@ export const FEATURES = [
     icon: "broadcast",
   },
   {
-    title: "Automate your workflow",
+    title: "Automate Your Workflow",
     description:
       "Connect your social accounts, set up workflows, and let ReSocial handle distribution while you create.",
     icon: "workflow",
   },
   {
-    title: "Auto-resize for each platform",
+    title: "Auto-Resize for Each Platform",
     description:
       "Videos are automatically resized and optimized for each platform's requirements — vertical, square, or landscape.",
     icon: "resize",
   },
   {
-    title: "Schedule & plan ahead",
+    title: "Schedule & Plan Ahead",
     description:
       "Plan your content calendar and schedule posts to go live at the perfect time on every platform.",
     icon: "calendar",
   },
   {
-    title: "Remove watermarks",
+    title: "Remove Watermarks",
     description:
       "Automatically strip platform watermarks when repurposing content across channels.",
     icon: "eraser",
   },
   {
-    title: "Templates & branding",
+    title: "Templates & Branding",
     description:
       "Apply consistent templates and branding overlays to all your distributed content.",
     icon: "template",

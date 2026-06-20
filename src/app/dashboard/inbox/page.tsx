@@ -200,7 +200,7 @@ export default function InboxPage() {
               onChange={(e) => setPlatformFilter(e.target.value)}
               className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2"
             >
-              <option value="all">All platforms</option>
+              <option value="all">All Platforms</option>
               {PLATFORMS.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name}
@@ -212,7 +212,7 @@ export default function InboxPage() {
               onChange={(e) => setTypeFilter(e.target.value)}
               className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2"
             >
-              <option value="all">All types</option>
+              <option value="all">All Types</option>
               <option value="comment">Comments</option>
               <option value="dm">DMs</option>
               <option value="mention">Mentions</option>
@@ -222,7 +222,7 @@ export default function InboxPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full text-sm rounded-xl border border-gray-200 px-3 py-2"
             >
-              <option value="all">All status</option>
+              <option value="all">All Status</option>
               <option value="unread">Unread</option>
               <option value="replied">Replied</option>
             </select>
@@ -234,7 +234,7 @@ export default function InboxPage() {
             </p>
             <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
               {savedReplies.length === 0 && (
-                <p className="text-xs text-gray-400">No templates yet</p>
+                <p className="text-xs text-gray-400">No Templates Yet</p>
               )}
               {savedReplies.map((r) => (
                 <div
@@ -291,7 +291,7 @@ export default function InboxPage() {
               ) : messages.length === 0 ? (
                 <div className="text-center py-12 px-4">
                   <MessageSquare size={32} className="mx-auto text-gray-300 mb-3" />
-                  <p className="text-gray-500 text-sm">No messages yet.</p>
+                  <p className="text-gray-500 text-sm">No Messages Yet.</p>
                   <p className="text-gray-400 text-xs mt-1">
                     Publish content, then sync to pull comments from Instagram, Facebook, and YouTube.
                   </p>

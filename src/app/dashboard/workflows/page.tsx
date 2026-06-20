@@ -164,11 +164,11 @@ export default function WorkflowsPage() {
       )}
 
       {loading ? (
-        <p className="text-gray-500">Loading workflows...</p>
+        <p className="text-gray-500">Loading Workflows...</p>
       ) : items.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
           <Workflow size={40} className="mx-auto text-gray-300 mb-4" />
-          <p className="text-gray-500 mb-4">No workflows yet.</p>
+          <p className="text-gray-500 mb-4">No Workflows Yet.</p>
           <Button size="sm" onClick={() => setShowForm(true)}>
             Create your first workflow
           </Button>
@@ -211,7 +211,7 @@ export default function WorkflowsPage() {
                   </div>
                   <div className="flex gap-4 text-xs text-gray-500">
                     {wf.autoResize && <span>Auto-resize</span>}
-                    {wf.removeWatermark && <span>Remove watermarks</span>}
+                    {wf.removeWatermark && <span>Remove Watermarks</span>}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

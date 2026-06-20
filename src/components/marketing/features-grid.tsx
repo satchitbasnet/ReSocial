@@ -26,7 +26,7 @@ export function FeaturesGrid() {
             Features
           </p>
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Powerful tools that make your life easier
+            Powerful Tools That Make Your Life Easier
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg">
             Discover all the fantastic tools that will transform how you

@@ -204,7 +204,7 @@ function AccountsContent() {
                     <p className="font-medium text-gray-900">{platform.name}</p>
                     {isConnected && (
                       <p className="text-xs text-green-600 flex items-center gap-1">
-                        <Check size={12} /> {connected.length} connected
+                        <Check size={12} /> {connected.length} Connected
                       </p>
                     )}
                     {usesOAuth && !isConnected && (
@@ -246,7 +246,7 @@ function AccountsContent() {
       {!loading && accounts.length === 0 && (
         <div className="text-center py-12 text-gray-500">
           <p>
-            No accounts connected yet. Click &quot;Connect&quot; on any platform
+            No Accounts Connected Yet. Click &quot;Connect&quot; on Any Platform
             above.
           </p>
         </div>

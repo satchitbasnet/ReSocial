@@ -268,7 +268,7 @@ export default function CalendarPage() {
                 onChange={(e) => setPlatformFilter(e.target.value)}
                 className="pl-8 pr-8 py-2 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 appearance-none"
               >
-                <option value="all">All platforms</option>
+                <option value="all">All Platforms</option>
                 {PLATFORMS.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}

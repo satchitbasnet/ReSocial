@@ -63,10 +63,10 @@ function SignupForm() {
   }
 
   const perks = [
-    "14-day free trial",
-    "10 videos free, no credit card",
-    "All platform integrations",
-    "Auto-resize & scheduling",
+    "14-Day Free Trial",
+    "10 Videos Free, No Credit Card",
+    "All Platform Integrations",
+    "Auto-Resize & Scheduling",
   ];
 
   return (
@@ -74,7 +74,7 @@ function SignupForm() {
       <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
         <div className="text-white max-w-md">
           <Logo size="lg" variant="light" href={null} className="mb-8" />
-          <h2 className="text-3xl font-bold mb-4">Start your free trial</h2>
+          <h2 className="text-3xl font-bold mb-4">Start Your Free Trial</h2>
           <p className="text-white/80 text-lg mb-8">
             Join thousands of creators distributing content across every major
             social platform.
@@ -97,12 +97,12 @@ function SignupForm() {
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Create your account
+            Create Your Account
           </h1>
           <p className="text-gray-600 mb-8">
             Already have an account?{" "}
             <Link href="/login" className="text-brand-600 font-medium hover:underline">
-              Log in
+              Log In
             </Link>
           </p>
 
@@ -121,7 +121,7 @@ function SignupForm() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                Full name
+                Full Name
               </label>
               <input
                 type="text"
@@ -163,7 +163,7 @@ function SignupForm() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Start 14-day free trial"}
+              {loading ? "Creating Account..." : "Start 14-Day Free Trial"}
             </Button>
 
             <p className="text-xs text-gray-500 text-center">

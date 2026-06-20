@@ -98,7 +98,7 @@ export default function ReportsPage() {
 
         {frequency === "weekly" && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Send on</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Send On</label>
             <select
               value={dayOfWeek}
               onChange={(e) => setDayOfWeek(Number(e.target.value))}

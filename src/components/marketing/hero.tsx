@@ -12,7 +12,7 @@ export function Hero({
   badge = "Post Once, Reach Everywhere",
   title,
   subtitle,
-  cta = "Start your 14-day free trial",
+  cta = "Start Your 14-Day Free Trial",
 }: HeroProps) {
   return (
     <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
@@ -39,7 +39,7 @@ export function Hero({
             {cta}
             <ArrowRight size={18} className="ml-2" />
           </Button>
-          <p className="text-sm text-gray-500">No credit card required</p>
+          <p className="text-sm text-gray-500">No Credit Card Required</p>
         </div>
       </div>
     </section>

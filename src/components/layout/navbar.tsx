@@ -41,7 +41,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
 
         <div className="hidden md:flex items-center gap-3">
           <Button variant="ghost" size="sm" href="/login">
-            Log in
+            Log In
           </Button>
           <Button size="sm" href="/signup">
             Start Free Trial
@@ -71,7 +71,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
           ))}
           <div className="flex flex-col gap-2 pt-2">
             <Button variant="outline" size="sm" href="/login">
-              Log in
+              Log In
             </Button>
             <Button size="sm" href="/signup">
               Start Free Trial

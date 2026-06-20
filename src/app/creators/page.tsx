@@ -13,13 +13,13 @@ export default function CreatorsPage() {
       <main>
         <Hero
           badge="Content Creators' Dream Tool"
-          title="Distribute your content everywhere"
+          title="Distribute Your Content Everywhere"
           subtitle="Reach a larger audience, gain more followers, and grow your accounts through seamless omnipresence and automated content sharing."
         />
         <section className="py-16 border-y border-gray-100">
           <div className="mx-auto max-w-7xl px-6 text-center">
             <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-8">
-              Distribute to all major platforms
+              Distribute to All Major Platforms
             </p>
             <PlatformLogos />
           </div>

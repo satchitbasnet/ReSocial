@@ -17,21 +17,21 @@ export default async function DashboardPage() {
     {
       label: "Videos Published",
       value: stats.videosPublished,
-      sub: stats.trialLimit ? `of ${stats.trialLimit} trial limit` : "this period",
+      sub: stats.trialLimit ? `Of ${stats.trialLimit} Trial Limit` : "This Period",
       icon: BarChart3,
       color: "text-brand-600 bg-brand-50",
     },
     {
       label: "Connected Accounts",
       value: stats.accountCount,
-      sub: `across ${PLATFORMS.length} platforms`,
+      sub: `Across ${PLATFORMS.length} Platforms`,
       icon: Link2,
       color: "text-green-600 bg-green-50",
     },
     {
       label: "Total Posts",
       value: stats.postCount,
-      sub: "all time",
+      sub: "All Time",
       icon: Upload,
       color: "text-purple-600 bg-purple-50",
     },
@@ -41,10 +41,10 @@ export default async function DashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-          Welcome back, {session.name.split(" ")[0]}!
+          Welcome Back, {session.name.split(" ")[0]}!
         </h1>
         <p className="text-gray-600 mt-1">
-          Upload once, distribute everywhere. Here&apos;s your overview.
+          Upload Once, Distribute Everywhere. Here&apos;s Your Overview.
         </p>
       </div>
 
@@ -53,10 +53,10 @@ export default async function DashboardPage() {
           <Zap size={20} className="text-amber-600 shrink-0" />
           <div className="flex-1">
             <p className="text-sm font-medium text-amber-900">
-              {stats.videosPublished}/{stats.trialLimit} trial videos used
+              {stats.videosPublished}/{stats.trialLimit} Trial Videos Used
             </p>
             <p className="text-xs text-amber-700">
-              Upgrade to keep publishing after your trial ends.
+              Upgrade to Keep Publishing After Your Trial Ends.
             </p>
           </div>
           <Button size="sm" href="/pricing">Upgrade</Button>
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
               <div>
                 <p className="font-medium text-gray-900">Upload & Publish</p>
                 <p className="text-xs text-gray-500">
-                  Upload a video and distribute to all platforms
+                  Upload a Video and Distribute to All Platforms
                 </p>
               </div>
             </Link>
@@ -111,7 +111,7 @@ export default async function DashboardPage() {
               <div>
                 <p className="font-medium text-gray-900">View Analytics</p>
                 <p className="text-xs text-gray-500">
-                  Track views, engagement, and best posting times
+                  Track Views, Engagement, and Best Posting Times
                 </p>
               </div>
             </Link>
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
               <div>
                 <p className="font-medium text-gray-900">Manage Workflows</p>
                 <p className="text-xs text-gray-500">
-                  Automate distribution rules across platforms
+                  Automate Distribution Rules Across Platforms
                 </p>
               </div>
             </Link>
@@ -139,7 +139,7 @@ export default async function DashboardPage() {
               <div>
                 <p className="font-medium text-gray-900">Connect Accounts</p>
                 <p className="text-xs text-gray-500">
-                  Link your TikTok, YouTube, Instagram, and more
+                  Link Your TikTok, YouTube, Instagram, and More
                 </p>
               </div>
             </Link>

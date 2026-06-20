@@ -101,7 +101,7 @@ export default function AffiliatePage() {
           <Gift size={32} />
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-3">
-          Earn 30% referring creators
+          Earn 30% Referring Creators
         </h1>
         <p className="text-gray-600 mb-8">
           Join the ReSocial affiliate program. Earn 30% commission on the first
@@ -112,7 +112,7 @@ export default function AffiliatePage() {
         )}
         <Button onClick={enroll} disabled={enrolling} size="lg">
           {enrolling && <Loader2 size={18} className="mr-2 animate-spin" />}
-          {enrolling ? "Joining..." : "Join affiliate program"}
+          {enrolling ? "Joining..." : "Join Affiliate Program"}
         </Button>
       </div>
     );
@@ -135,7 +135,7 @@ export default function AffiliatePage() {
 
       <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Your referral link
+          Your Referral Link
         </label>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
@@ -157,7 +157,7 @@ export default function AffiliatePage() {
             ) : (
               <>
                 <Copy size={16} className="mr-2" />
-                Copy link
+                Copy Link
               </>
             )}
           </Button>
@@ -170,30 +170,30 @@ export default function AffiliatePage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <StatCard
-          label="Total referrals"
+          label="Total Referrals"
           value={String(data.totalReferrals)}
-          sub={`${data.convertedReferrals} converted`}
+          sub={`${data.convertedReferrals} Converted`}
           icon={Users}
           color="text-blue-600 bg-blue-50"
         />
         <StatCard
-          label="Conversion rate"
+          label="Conversion Rate"
           value={`${data.conversionRate.toFixed(1)}%`}
-          sub={`${data.pendingReferrals} pending`}
+          sub={`${data.pendingReferrals} Pending`}
           icon={TrendingUp}
           color="text-green-600 bg-green-50"
         />
         <StatCard
-          label="Total earned"
+          label="Total Earned"
           value={formatMoney(data.totalEarnings)}
-          sub={`Est. ${formatMoney(data.estimatedEarnings)} incl. pending`}
+          sub={`Est. ${formatMoney(data.estimatedEarnings)} Incl. Pending`}
           icon={DollarSign}
           color="text-brand-600 bg-brand-50"
         />
       </div>
 
       <div className="bg-gray-50 rounded-2xl p-6 border border-gray-100 text-sm text-gray-600">
-        <h2 className="font-semibold text-gray-900 mb-3">How it works</h2>
+        <h2 className="font-semibold text-gray-900 mb-3">How It Works</h2>
         <ol className="list-decimal list-inside space-y-2">
           <li>Share your referral link with creators and agencies.</li>
           <li>They sign up for ReSocial using your link.</li>

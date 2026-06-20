@@ -43,10 +43,10 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
         <div className="text-white max-w-md">
           <Logo size="lg" variant="light" href={null} className="mb-8" />
-          <h2 className="text-3xl font-bold mb-4">Welcome back</h2>
+          <h2 className="text-3xl font-bold mb-4">Welcome Back</h2>
           <p className="text-white/80 text-lg">
-            Post Once, Reach Everywhere. Manage your content distribution from
-            one powerful dashboard.
+            Post Once, Reach Everywhere. Manage Your Content Distribution From
+            One Powerful Dashboard.
           </p>
         </div>
       </div>
@@ -55,11 +55,11 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <Logo className="mb-8" />
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Log in</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Log In</h1>
           <p className="text-gray-600 mb-8">
             Don&apos;t have an account?{" "}
             <Link href="/signup" className="text-brand-600 font-medium hover:underline">
-              Start free trial
+              Start Free Trial
             </Link>
           </p>
 
@@ -99,7 +99,7 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Log in"}
+              {loading ? "Signing In..." : "Log In"}
             </Button>
           </form>
         </div>

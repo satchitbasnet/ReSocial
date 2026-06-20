@@ -43,10 +43,10 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Simple pricing to grow your social platforms
+            Simple Pricing to Grow Your Social Platforms
           </h2>
           <p className="text-gray-600 text-lg mb-2">
-            Publish 10 videos for FREE — No credit card required
+            Publish 10 Videos for FREE — No Credit Card Required
           </p>
 
           {showToggle && (
@@ -113,21 +113,21 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
                 <ul className="space-y-3 mb-8">
                   <li className="flex items-start gap-2 text-sm text-gray-700">
                     <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
-                    Connect up to {plan.accountsPerPlatform} accounts per platform
+                    Connect Up to {plan.accountsPerPlatform} Accounts per Platform
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-700">
                     <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
                     {plan.videosPerMonth === Infinity
-                      ? "Unlimited published videos"
+                      ? "Unlimited Published Videos"
                       : `${plan.videosPerMonth.toLocaleString()} videos/month`}
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-700">
                     <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
-                    Auto-resize & watermark removal
+                    Auto-Resize & Watermark Removal
                   </li>
                   <li className="flex items-start gap-2 text-sm text-gray-700">
                     <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
-                    All platform integrations
+                    All Platform Integrations
                   </li>
                 </ul>
 
@@ -140,7 +140,7 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
                   {loadingPlan === key && (
                     <Loader2 size={16} className="mr-2 animate-spin" />
                   )}
-                  {loadingPlan === key ? "Redirecting..." : "Get started"}
+                  {loadingPlan === key ? "Redirecting..." : "Get Started"}
                 </Button>
               </div>
             );

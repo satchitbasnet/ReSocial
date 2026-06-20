@@ -34,7 +34,7 @@ export default async function SettingsPage() {
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
-      <p className="text-gray-600 mb-8">Manage your account and subscription.</p>
+      <p className="text-gray-600 mb-8">Manage Your Account and Subscription.</p>
 
       <Suspense fallback={null}>
         <SettingsAlerts />
@@ -74,7 +74,7 @@ export default async function SettingsPage() {
           {stats.trialLimit && (
             <div className="mb-4">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500">Videos published</span>
+                <span className="text-gray-500">Videos Published</span>
                 <span className="font-medium">
                   {stats.videosPublished}/{stats.trialLimit}
                 </span>

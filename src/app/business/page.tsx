@@ -13,7 +13,7 @@ export default function BusinessPage() {
       <main>
         <Hero
           badge="For Small Businesses"
-          title="Promote your product on all platforms"
+          title="Promote Your Product on All Platforms"
           subtitle="Greater reach, brand visibility, and sales growth through seamless omnipresence and automated content sharing."
         />
         <section className="py-16 border-y border-gray-100">
