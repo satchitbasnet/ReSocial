@@ -34,7 +34,7 @@ export function Logo({
         alt="ReSocial"
         width={px}
         height={px}
-        className="rounded-xl shrink-0 shadow-[0_2px_8px_rgba(31,143,255,0.2),0_1px_3px_rgba(0,0,0,0.08)]"
+        className="rounded-xl shrink-0 shadow-[0_2px_8px_rgba(14,165,255,0.25),0_1px_3px_rgba(0,0,0,0.08)]"
         priority
       />
       {showWordmark && (

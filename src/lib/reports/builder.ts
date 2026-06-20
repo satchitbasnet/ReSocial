@@ -120,8 +120,8 @@ export function renderReportHtml(data: ReportData, periodLabel: string) {
     <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;color:#111">
       <h1 style="font-size:24px;margin-bottom:4px">ReSocial ${periodLabel} Report</h1>
       <p style="color:#666;margin-top:0">Your social performance summary</p>
-      <div style="background:#f0f4ff;border-radius:12px;padding:20px;margin:24px 0">
-        <p style="margin:0;font-size:14px;color:#4c6ef5">Total views</p>
+      <div style="background:#eef7ff;border-radius:12px;padding:20px;margin:24px 0">
+        <p style="margin:0;font-size:14px;color:#2563FF">Total views</p>
         <p style="margin:4px 0 0;font-size:32px;font-weight:bold">${data.totalViews.toLocaleString()}</p>
       </div>
       ${
