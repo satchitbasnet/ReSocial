@@ -32,7 +32,7 @@ export default function HomePage() {
           <div className="mx-auto max-w-7xl px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                <h2 className="font-display text-3xl font-bold text-gray-900 mb-6">
                   Make Waves on Social
                 </h2>
                 <div className="space-y-6">
@@ -41,7 +41,7 @@ export default function HomePage() {
                       <Clock size={24} />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-display font-semibold text-gray-900">
                         Save Up to 20 Hours per Week
                       </p>
                       <p className="text-gray-600 text-sm mt-1">
@@ -54,7 +54,7 @@ export default function HomePage() {
                       <TrendingUp size={24} />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">
+                      <p className="font-display font-semibold text-gray-900">
                         Up to 50% More Engagement
                       </p>
                       <p className="text-gray-600 text-sm mt-1">

@@ -38,7 +38,7 @@ export function Logo({
         priority
       />
       {showWordmark && (
-        <span className={cn("font-bold leading-none", textSize)}>
+        <span className={cn("font-display font-bold leading-none tracking-tight", textSize)}>
           <span className="gradient-text-re">Re</span>
           <span
             className={variant === "light" ? "text-white" : "text-gray-900"}

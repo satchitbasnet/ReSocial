@@ -43,7 +43,7 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
         <div className="text-white max-w-md">
           <Logo size="lg" variant="light" href={null} className="mb-8" />
-          <h2 className="text-3xl font-bold mb-4">Welcome Back</h2>
+          <h2 className="font-display text-3xl font-bold mb-4">Welcome Back</h2>
           <p className="text-white/80 text-lg">
             Post Once, Reach Everywhere. Manage Your Content Distribution From
             One Powerful Dashboard.

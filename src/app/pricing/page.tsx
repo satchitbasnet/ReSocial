@@ -11,7 +11,7 @@ export default function PricingPage() {
       <Navbar />
       <main className="pt-24">
         <div className="text-center py-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="font-display text-4xl md:text-5xl font-bold text-gray-900 mb-4">
             Simple Pricing to Grow Your Social Platforms
           </h1>
           <p className="text-gray-600 text-lg">

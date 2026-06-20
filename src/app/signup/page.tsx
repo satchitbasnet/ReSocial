@@ -74,7 +74,7 @@ function SignupForm() {
       <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
         <div className="text-white max-w-md">
           <Logo size="lg" variant="light" href={null} className="mb-8" />
-          <h2 className="text-3xl font-bold mb-4">Start Your Free Trial</h2>
+          <h2 className="font-display text-3xl font-bold mb-4">Start Your Free Trial</h2>
           <p className="text-white/80 text-lg mb-8">
             Join thousands of creators distributing content across every major
             social platform.

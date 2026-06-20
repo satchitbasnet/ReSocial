@@ -11,7 +11,7 @@ export function FAQSection() {
   return (
     <section className="py-24 bg-gray-50">
       <div className="mx-auto max-w-3xl px-6">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">
+        <h2 className="font-display text-3xl font-bold text-gray-900 text-center mb-12">
           Questions? We&apos;ve Got Answers.
         </h2>
 

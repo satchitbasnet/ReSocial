@@ -25,7 +25,7 @@ export function FeaturesGrid() {
           <p className="text-brand-600 font-semibold text-sm uppercase tracking-wider mb-3">
             Features
           </p>
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Powerful Tools That Make Your Life Easier
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-lg">
@@ -45,7 +45,7 @@ export function FeaturesGrid() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 mb-5">
                   <Icon size={24} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="font-display text-lg font-medium text-gray-900 mb-2">
                   {feature.title}
                 </h3>
                 <p className="text-gray-600 text-sm leading-relaxed">
