@@ -253,6 +253,11 @@ export function clearMediaProcessCache(): void {
   batchCache.clear();
 }
 
+export interface PrepareMediaResult {
+  url: string;
+  didRunFfmpeg: boolean;
+}
+
 /**
  * Prepare media for a target platform using workflow flags (cached per batch).
  */
@@ -261,9 +266,9 @@ export async function prepareMediaForPublish(
   platform: PlatformId,
   userId: string,
   options: ProcessMediaOptions
-): Promise<string> {
+): Promise<PrepareMediaResult> {
   if (!options.autoResize && !options.removeWatermark) {
-    return inputUrl;
+    return { url: inputUrl, didRunFfmpeg: false };
   }
 
   const cacheKey = [
@@ -277,7 +282,7 @@ export async function prepareMediaForPublish(
 
   const cached = batchCache.get(cacheKey);
   if (cached) {
-    return cached;
+    return { url: cached, didRunFfmpeg: false };
   }
 
   const processed = await processMediaForPlatform(
@@ -287,5 +292,8 @@ export async function prepareMediaForPublish(
     options
   );
   batchCache.set(cacheKey, processed);
-  return processed;
+  return {
+    url: processed,
+    didRunFfmpeg: processed !== inputUrl,
+  };
 }

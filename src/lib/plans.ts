@@ -105,6 +105,18 @@ const HASHTAG_LIMITS: Record<UserPlan, number> = {
   agency: 50,
 };
 
+/** Soft fair-use caps for ffmpeg processing ops per billing period. */
+export const PROCESSING_OPS_CAPS: Record<UserPlan, number> = {
+  trial: 30,
+  starter: 150,
+  pro: 500,
+  agency: 2000,
+};
+
+export function getProcessingOpsCap(plan: UserPlan): number {
+  return PROCESSING_OPS_CAPS[plan];
+}
+
 export function getHashtagLimit(plan: UserPlan): number {
   return HASHTAG_LIMITS[plan];
 }

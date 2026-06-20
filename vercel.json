@@ -3,6 +3,10 @@
     {
       "path": "/api/reports/send",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/usage-reset",
+      "schedule": "0 6 * * *"
     }
   ],
   "functions": {

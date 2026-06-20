@@ -45,7 +45,7 @@ export default function LoginPage() {
           <Logo size="lg" variant="light" href={null} className="mb-8" />
           <h2 className="text-3xl font-bold mb-4">Welcome back</h2>
           <p className="text-white/80 text-lg">
-            Post once, reach everywhere. Manage your content distribution from
+            Post Once, Reach Everywhere. Manage your content distribution from
             one powerful dashboard.
           </p>
         </div>

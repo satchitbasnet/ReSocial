@@ -3,9 +3,40 @@ import { eq } from "drizzle-orm";
 import Stripe from "stripe";
 import { getDb } from "@/lib/db";
 import { users } from "@/lib/db/schema";
-import { getStripe, planFromPriceId } from "@/lib/stripe";
+import { getStripe, planFromPriceId, getSubscriptionBillingPeriod } from "@/lib/stripe";
 import type { UserPlan } from "@/lib/plans";
 import { creditAffiliateCommission } from "@/lib/affiliate";
+
+async function syncBillingFromSubscription(
+  subscription: Stripe.Subscription,
+  plan: UserPlan | null
+) {
+  const db = getDb();
+  const userId = subscription.metadata?.userId;
+  if (!userId) return;
+
+  const customerId =
+    typeof subscription.customer === "string"
+      ? subscription.customer
+      : subscription.customer.id;
+
+  const period = getSubscriptionBillingPeriod(subscription);
+
+  await db
+    .update(users)
+    .set({
+      ...(plan ? { plan } : {}),
+      stripeCustomerId: customerId,
+      stripeSubscriptionId: subscription.id,
+      ...(period
+        ? {
+            billingPeriodStart: period.start,
+            billingPeriodEnd: period.end,
+          }
+        : {}),
+    })
+    .where(eq(users.id, userId));
+}
 
 export async function POST(request: NextRequest) {
   const stripe = getStripe();
@@ -17,7 +48,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const body = await request.text();
+  const body = Buffer.from(await request.arrayBuffer()).toString("utf8");
   const signature = request.headers.get("stripe-signature");
   if (!signature) {
     return NextResponse.json({ error: "Missing signature" }, { status: 400 });
@@ -43,6 +74,17 @@ export async function POST(request: NextRequest) {
           .update(users)
           .set({ plan })
           .where(eq(users.id, userId));
+      }
+
+      if (userId && session.subscription) {
+        const subId =
+          typeof session.subscription === "string"
+            ? session.subscription
+            : session.subscription.id;
+        const sub = await stripe.subscriptions.retrieve(subId);
+        const priceId = sub.items.data[0]?.price?.id;
+        const subPlan = priceId ? planFromPriceId(priceId) : plan ?? null;
+        await syncBillingFromSubscription(sub, subPlan);
       }
     }
 
@@ -86,10 +128,7 @@ export async function POST(request: NextRequest) {
       const plan = priceId ? planFromPriceId(priceId) : null;
 
       if (userId && plan && subscription.status === "active") {
-        await db
-          .update(users)
-          .set({ plan })
-          .where(eq(users.id, userId));
+        await syncBillingFromSubscription(subscription, plan);
       }
     }
 

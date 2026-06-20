@@ -9,7 +9,7 @@ interface HeroProps {
 }
 
 export function Hero({
-  badge = "Post once, reach everywhere",
+  badge = "Post Once, Reach Everywhere",
   title,
   subtitle,
   cta = "Start your 14-day free trial",

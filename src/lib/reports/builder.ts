@@ -5,6 +5,7 @@ import {
   platformDailyStats,
   posts,
 } from "@/lib/db/schema";
+import { sendEmail } from "@/lib/email/resend";
 
 export interface ReportData {
   totalViews: number;
@@ -135,7 +136,7 @@ export function renderReportHtml(data: ReportData, periodLabel: string) {
         <thead><tr style="text-align:left;color:#666"><th style="padding:8px">Platform</th><th style="padding:8px;text-align:right">Views</th><th style="padding:8px;text-align:right">Share</th></tr></thead>
         <tbody>${platformRows || '<tr><td colspan="3" style="padding:8px;color:#999">No data yet</td></tr>'}</tbody>
       </table>
-      <p style="margin-top:32px;font-size:12px;color:#999">Sent by ReSocial — Post once, reach everywhere.</p>
+      <p style="margin-top:32px;font-size:12px;color:#999">Sent by ReSocial — Post Once, Reach Everywhere.</p>
     </div>
   `;
 }
@@ -145,26 +146,5 @@ export async function sendReportEmail(
   subject: string,
   html: string
 ): Promise<boolean> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn("[Reports] RESEND_API_KEY not set — skipping email send");
-    return false;
-  }
-
-  const from = process.env.REPORT_FROM_EMAIL ?? "ReSocial <reports@resocial.app>";
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from, to: [to], subject, html }),
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("[Reports] Resend error:", err);
-    return false;
-  }
-  return true;
+  return sendEmail({ to, subject, html });
 }

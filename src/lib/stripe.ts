@@ -58,3 +58,27 @@ export function planFromPriceId(priceId: string): UserPlan | null {
   }
   return null;
 }
+
+/** Billing period from subscription item (Stripe Basil API). */
+export function getSubscriptionBillingPeriod(
+  subscription: Stripe.Subscription
+): { start: Date; end: Date } | null {
+  const item = subscription.items.data[0] as
+    | (Stripe.SubscriptionItem & {
+        current_period_start?: number;
+        current_period_end?: number;
+      })
+    | undefined;
+
+  if (
+    !item?.current_period_start ||
+    !item?.current_period_end
+  ) {
+    return null;
+  }
+
+  return {
+    start: new Date(item.current_period_start * 1000),
+    end: new Date(item.current_period_end * 1000),
+  };
+}

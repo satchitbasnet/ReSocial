@@ -7,6 +7,7 @@ import {
   boolean,
   jsonb,
   pgEnum,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -66,8 +67,35 @@ export const users = pgTable("users", {
   plan: planEnum("plan").default("trial").notNull(),
   trialEndsAt: timestamp("trial_ends_at"),
   videosPublished: integer("videos_published").default(0).notNull(),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  billingPeriodStart: timestamp("billing_period_start"),
+  billingPeriodEnd: timestamp("billing_period_end"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const usageMeters = pgTable(
+  "usage_meters",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    periodStart: timestamp("period_start").notNull(),
+    periodEnd: timestamp("period_end").notNull(),
+    processingOpsUsed: integer("processing_ops_used").default(0).notNull(),
+    postsPublished: integer("posts_published").default(0).notNull(),
+    capWarningsSent: integer("cap_warnings_sent").default(0).notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("usage_meters_user_period_idx").on(
+      table.userId,
+      table.periodStart
+    ),
+  ]
+);
 
 export const connectedAccounts = pgTable("connected_accounts", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -139,6 +167,7 @@ export const distributions = pgTable("distributions", {
   platformPostId: text("platform_post_id"),
   caption: text("caption"),
   errorMessage: text("error_message"),
+  processedDowngraded: boolean("processed_downgraded").default(false).notNull(),
   publishedAt: timestamp("published_at"),
 });
 
@@ -146,8 +175,13 @@ export const usersRelations = relations(users, ({ many, one }) => ({
   connectedAccounts: many(connectedAccounts),
   workflows: many(workflows),
   posts: many(posts),
+  usageMeters: many(usageMeters),
   driveConnection: one(driveConnections),
   affiliate: one(affiliates),
+}));
+
+export const usageMetersRelations = relations(usageMeters, ({ one }) => ({
+  user: one(users, { fields: [usageMeters.userId], references: [users.id] }),
 }));
 
 export const postsRelations = relations(posts, ({ one, many }) => ({
@@ -394,6 +428,7 @@ export type PostingTimeInsight = typeof postingTimeInsights.$inferSelect;
 export type Affiliate = typeof affiliates.$inferSelect;
 export type Referral = typeof referrals.$inferSelect;
 
+export type UsageMeter = typeof usageMeters.$inferSelect;
 export type User = typeof users.$inferSelect;
 export type ConnectedAccount = typeof connectedAccounts.$inferSelect;
 export type DriveConnection = typeof driveConnections.$inferSelect;

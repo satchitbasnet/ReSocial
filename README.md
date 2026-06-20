@@ -1,6 +1,6 @@
 # ReSocial
 
-**Post once, reach everywhere.** ReSocial is an automated content repurposing and distribution platform — upload your videos once and distribute them to TikTok, YouTube, Instagram, Facebook, LinkedIn, X, Pinterest, and Snapchat.
+**Post Once, Reach Everywhere.** ReSocial is an automated content repurposing and distribution platform — upload your videos once and distribute them to TikTok, YouTube, Instagram, Facebook, LinkedIn, X, Pinterest, and Snapchat.
 
 Inspired by [Repurpose.io](https://repurpose.io), built as a full-stack Next.js application.
 

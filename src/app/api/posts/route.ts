@@ -24,6 +24,10 @@ import {
   extensionFromMediaUrl,
   sanitizeBackupFilename,
 } from "@/lib/integrations/google-drive";
+import {
+  incrementUsage,
+  isOverFairUseCap,
+} from "@/lib/usage/tracker";
 
 const createPostSchema = z.object({
   title: z.string().min(1),
@@ -199,30 +203,42 @@ export async function POST(request: NextRequest) {
           const account = targetAccounts.find((a) => a.id === dist.accountId)!;
 
           let publishMediaUrl = mediaUrl;
+          let processedDowngraded = false;
+
           if (processOptions) {
-            try {
-              publishMediaUrl = await prepareMediaForPublish(
-                mediaUrl,
-                account.platform as PlatformId,
-                session.userId,
-                processOptions
-              );
-            } catch (procErr) {
-              console.error(
-                `[ReSocial] Media processing failed for ${account.platform}:`,
-                procErr
-              );
-              await db
-                .update(distributions)
-                .set({
-                  status: "failed",
-                  errorMessage:
-                    procErr instanceof Error
-                      ? procErr.message
-                      : "Media processing failed",
-                })
-                .where(eq(distributions.id, dist.id));
-              return;
+            const overCap = await isOverFairUseCap(session.userId);
+
+            if (overCap) {
+              processedDowngraded = true;
+            } else {
+              try {
+                const prepared = await prepareMediaForPublish(
+                  mediaUrl,
+                  account.platform as PlatformId,
+                  session.userId,
+                  processOptions
+                );
+                publishMediaUrl = prepared.url;
+                if (prepared.didRunFfmpeg) {
+                  await incrementUsage(session.userId, "processing");
+                }
+              } catch (procErr) {
+                console.error(
+                  `[ReSocial] Media processing failed for ${account.platform}:`,
+                  procErr
+                );
+                await db
+                  .update(distributions)
+                  .set({
+                    status: "failed",
+                    errorMessage:
+                      procErr instanceof Error
+                        ? procErr.message
+                        : "Media processing failed",
+                  })
+                  .where(eq(distributions.id, dist.id));
+                return;
+              }
             }
           }
 
@@ -255,6 +271,7 @@ export async function POST(request: NextRequest) {
               status: result.success ? "published" : "failed",
               platformPostId: result.platformPostId,
               errorMessage: result.error,
+              processedDowngraded,
               publishedAt: result.success ? new Date() : null,
             })
             .where(eq(distributions.id, dist.id));
@@ -296,6 +313,8 @@ export async function POST(request: NextRequest) {
         .update(users)
         .set({ videosPublished: user.videosPublished + 1 })
         .where(eq(users.id, session.userId));
+
+      await incrementUsage(session.userId, "post");
 
       fullSyncForUser(session.userId).catch((err) =>
         console.error("Post-publish analytics sync failed:", err)

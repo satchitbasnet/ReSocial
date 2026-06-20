@@ -67,7 +67,7 @@ export type PlanId = keyof typeof PLANS;
 
 export const FEATURES = [
   {
-    title: "Post once, reach everywhere",
+    title: "Post Once, Reach Everywhere",
     description:
       "Upload content once and automatically distribute it to TikTok, YouTube, Instagram, Facebook, LinkedIn, X, and more.",
     icon: "broadcast",

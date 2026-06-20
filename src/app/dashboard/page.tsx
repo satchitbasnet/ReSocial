@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Upload, Link2, BarChart3, Zap, Workflow } from "lucide-react";
 import { PLATFORMS } from "@/lib/constants";
 import { PlatformIcon } from "@/components/ui/platform-icon";
+import { ProcessingUsageBar } from "@/components/dashboard/processing-usage-bar";
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -61,6 +62,8 @@ export default async function DashboardPage() {
           <Button size="sm" href="/pricing">Upgrade</Button>
         </div>
       )}
+
+      <ProcessingUsageBar usage={stats.usage} />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {cards.map((card) => (

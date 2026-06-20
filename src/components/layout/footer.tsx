@@ -12,7 +12,7 @@ export function Footer() {
               <Logo variant="light" />
             </div>
             <p className="text-sm leading-relaxed">
-              Post once, reach everywhere. The automated content repurposing
+              Post Once, Reach Everywhere. The automated content repurposing
               platform for creators, businesses, and agencies.
             </p>
           </div>
