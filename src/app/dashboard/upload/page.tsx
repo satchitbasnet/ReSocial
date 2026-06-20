@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { PLATFORMS } from "@/lib/constants";
+import { PLATFORMS, PLATFORM_CAPTION_LIMITS, type PlatformId } from "@/lib/constants";
 import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Upload, Check, Loader2, X } from "lucide-react";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
@@ -22,6 +22,8 @@ export default function UploadPage() {
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [caption, setCaption] = useState("");
+  const [sameCaption, setSameCaption] = useState(true);
+  const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -47,6 +49,18 @@ export default function UploadPage() {
           );
         }
       });
+
+    const params = new URLSearchParams(window.location.search);
+    const scheduled = params.get("scheduledAt");
+    if (scheduled) {
+      setPublishNow(false);
+      setScheduleDate(scheduled.slice(0, 16));
+    }
+    const hashtag = params.get("hashtag");
+    if (hashtag) {
+      const tag = hashtag.startsWith("#") ? hashtag : `#${hashtag}`;
+      setCaption((c) => (c ? `${c} ${tag}` : tag));
+    }
   }, []);
 
   const handleFile = useCallback((f: File) => {
@@ -59,15 +73,43 @@ export default function UploadPage() {
     }
   }, []);
 
+  function handleCaptionChange(value: string) {
+    setCaption(value);
+    if (sameCaption) {
+      const next: Record<string, string> = {};
+      selectedPlatforms.forEach((p) => {
+        next[p] = value;
+      });
+      setPlatformCaptions(next);
+    }
+  }
+
+  function handlePlatformCaptionChange(platformId: string, value: string) {
+    setPlatformCaptions((prev) => ({ ...prev, [platformId]: value }));
+  }
+
   function togglePlatform(platformId: string) {
     const hasAccount = accounts.some((a) => a.platform === platformId);
     if (!hasAccount) return;
 
-    setSelectedPlatforms((prev) =>
-      prev.includes(platformId)
+    setSelectedPlatforms((prev) => {
+      const next = prev.includes(platformId)
         ? prev.filter((p) => p !== platformId)
-        : [...prev, platformId]
-    );
+        : [...prev, platformId];
+      if (sameCaption) {
+        const caps: Record<string, string> = {};
+        next.forEach((p) => {
+          caps[p] = caption;
+        });
+        setPlatformCaptions(caps);
+      } else if (!prev.includes(platformId)) {
+        setPlatformCaptions((c) => ({
+          ...c,
+          [platformId]: c[platformId] ?? caption,
+        }));
+      }
+      return next;
+    });
   }
 
   async function handlePublish() {
@@ -125,6 +167,12 @@ export default function UploadPage() {
         body: JSON.stringify({
           title,
           caption,
+          captions: Object.fromEntries(
+            selectedPlatforms.map((p) => [
+              p,
+              (sameCaption ? caption : platformCaptions[p]) || caption,
+            ])
+          ),
           mediaUrl: uploadData.mediaUrl,
           mediaType: uploadData.mediaType,
           platformIds: selectedPlatforms,
@@ -142,7 +190,13 @@ export default function UploadPage() {
       }
 
       setSuccess(true);
-      setTimeout(() => router.push("/dashboard/history"), 2000);
+      setTimeout(
+        () =>
+          router.push(
+            !publishNow && scheduleDate ? "/dashboard/calendar" : "/dashboard/history"
+          ),
+        2000
+      );
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -278,13 +332,82 @@ export default function UploadPage() {
           </label>
           <textarea
             value={caption}
-            onChange={(e) => setCaption(e.target.value)}
+            onChange={(e) => handleCaptionChange(e.target.value)}
             rows={3}
             className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
             placeholder="Write a caption for your post..."
           />
+          <p className="text-xs text-gray-400 mt-1">
+            {caption.length} characters (default for all platforms)
+          </p>
         </div>
       </div>
+
+      {selectedPlatforms.length > 0 && (
+        <div className="mb-8 bg-white rounded-2xl p-5 border border-gray-100">
+          <div className="flex items-center justify-between mb-4">
+            <label className="text-sm font-medium text-gray-700">
+              Per-platform captions
+            </label>
+            <label className="flex items-center gap-2 text-sm text-gray-600">
+              <input
+                type="checkbox"
+                checked={sameCaption}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSameCaption(checked);
+                  if (checked) {
+                    const caps: Record<string, string> = {};
+                    selectedPlatforms.forEach((p) => {
+                      caps[p] = caption;
+                    });
+                    setPlatformCaptions(caps);
+                  }
+                }}
+              />
+              Use same caption for all
+            </label>
+          </div>
+          {!sameCaption && (
+            <div className="space-y-4">
+              {selectedPlatforms.map((platformId) => {
+                const platform = PLATFORMS.find((p) => p.id === platformId);
+                const limit =
+                  PLATFORM_CAPTION_LIMITS[platformId as PlatformId] ?? 2200;
+                const text = platformCaptions[platformId] ?? caption;
+                return (
+                  <div key={platformId}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <PlatformIcon platform={platformId} size={16} />
+                      <span className="text-sm font-medium text-gray-700">
+                        {platform?.name}
+                      </span>
+                      <span
+                        className={cn(
+                          "text-xs ml-auto",
+                          text.length > limit ? "text-red-500" : "text-gray-400"
+                        )}
+                      >
+                        {text.length}/{limit}
+                      </span>
+                    </div>
+                    <textarea
+                      value={text}
+                      onChange={(e) =>
+                        handlePlatformCaptionChange(platformId, e.target.value)
+                      }
+                      rows={2}
+                      maxLength={limit}
+                      className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"
+                      placeholder={`Caption for ${platform?.name}...`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="mb-8 bg-white rounded-2xl p-5 border border-gray-100">
         <label className="block text-sm font-medium text-gray-700 mb-3">

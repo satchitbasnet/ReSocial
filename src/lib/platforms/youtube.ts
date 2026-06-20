@@ -12,6 +12,7 @@ const YOUTUBE_VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos";
 const YOUTUBE_SCOPES = [
   "https://www.googleapis.com/auth/youtube.upload",
   "https://www.googleapis.com/auth/youtube.readonly",
+  "https://www.googleapis.com/auth/youtube.force-ssl",
 ].join(" ");
 
 export interface YouTubeTokens {

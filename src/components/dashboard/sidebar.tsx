@@ -14,16 +14,29 @@ import {
   LogOut,
   Menu,
   X,
+  CalendarDays,
+  Inbox,
+  Hash,
+  Users,
+  BarChart2,
+  Mail,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/brand/logo";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays },
+  { href: "/dashboard/inbox", label: "Inbox", icon: Inbox, badge: true },
   { href: "/dashboard/upload", label: "Upload & Publish", icon: Upload },
   { href: "/dashboard/accounts", label: "Connected Accounts", icon: Link2 },
   { href: "/dashboard/workflows", label: "Workflows", icon: Workflow },
   { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/dashboard/listening", label: "Listening", icon: Hash },
+  { href: "/dashboard/benchmarking", label: "Benchmarking", icon: BarChart2 },
+  { href: "/dashboard/reports", label: "Reports", icon: Mail },
+  { href: "/dashboard/team", label: "Team", icon: Users },
   { href: "/dashboard/affiliate", label: "Affiliate", icon: Gift },
   { href: "/dashboard/history", label: "Post History", icon: History },
   { href: "/dashboard/settings", label: "Settings", icon: Settings },
@@ -39,6 +52,14 @@ export function DashboardSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadInbox, setUnreadInbox] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/inbox/unread-count")
+      .then((r) => r.json())
+      .then((d) => setUnreadInbox(d.unread ?? 0))
+      .catch(() => {});
+  }, [pathname]);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -49,12 +70,7 @@ export function DashboardSidebar({
   const sidebar = (
     <div className="flex flex-col h-full">
       <div className="p-6 border-b border-gray-100">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-bg text-white font-bold text-sm">
-            R
-          </div>
-          <span className="font-bold text-gray-900">ReSocial</span>
-        </Link>
+        <Logo size="sm" />
       </div>
 
       <nav className="flex-1 p-4 space-y-1">
@@ -76,6 +92,11 @@ export function DashboardSidebar({
             >
               <item.icon size={18} />
               {item.label}
+              {"badge" in item && item.badge && unreadInbox > 0 && (
+                <span className="ml-auto bg-brand-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                  {unreadInbox > 99 ? "99+" : unreadInbox}
+                </span>
+              )}
             </Link>
           );
         })}

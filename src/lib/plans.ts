@@ -89,3 +89,22 @@ export function planHasBestTimeInsight(plan: string): boolean {
 export function planHasFollowerTracking(plan: string): boolean {
   return ["pro", "agency"].includes(plan);
 }
+
+export function planHasTeamCollaboration(plan: string): boolean {
+  return plan === "agency";
+}
+
+export function planHasBenchmarking(plan: string): boolean {
+  return ["pro", "agency"].includes(plan);
+}
+
+const HASHTAG_LIMITS: Record<UserPlan, number> = {
+  trial: 5,
+  starter: 10,
+  pro: 25,
+  agency: 50,
+};
+
+export function getHashtagLimit(plan: UserPlan): number {
+  return HASHTAG_LIMITS[plan];
+}

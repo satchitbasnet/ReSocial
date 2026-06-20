@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Eye,
   Heart,
@@ -280,7 +281,15 @@ export function AnalyticsDashboard() {
       </div>
 
       <div className="bg-white rounded-2xl p-6 border border-gray-100">
-        <h2 className="font-semibold text-gray-900 mb-6">Top Performing Posts</h2>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="font-semibold text-gray-900">Top Performing Posts</h2>
+          <Link
+            href="/dashboard/analytics/posts"
+            className="text-sm text-brand-600 font-medium hover:underline"
+          >
+            View all posts →
+          </Link>
+        </div>
         <TopPostsTable posts={data?.topPosts ?? []} />
       </div>
     </div>

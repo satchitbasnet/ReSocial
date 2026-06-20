@@ -28,6 +28,7 @@ import {
 const createPostSchema = z.object({
   title: z.string().min(1),
   caption: z.string().optional(),
+  captions: z.record(z.string(), z.string()).optional(),
   mediaUrl: z.string().min(1),
   mediaType: z.string().default("video"),
   platformIds: z.array(z.string()).min(1),
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { title, caption, mediaUrl, mediaType, platformIds, workflowId, scheduledAt } =
+    const { title, caption, captions, mediaUrl, mediaType, platformIds, workflowId, scheduledAt } =
       parsed.data;
 
     const db = getDb();
@@ -169,7 +170,8 @@ export async function POST(request: NextRequest) {
           postId: post.id,
           accountId: account.id,
           platform: account.platform,
-          status: "processing" as const,
+          caption: captions?.[account.platform] || caption || "",
+          status: scheduledAt ? ("pending" as const) : ("processing" as const),
         }))
       )
       .returning();
@@ -224,6 +226,9 @@ export async function POST(request: NextRequest) {
             }
           }
 
+          const distCaption =
+            dist.caption?.trim() || caption || title;
+
           const result = await publishToPlatform(
             {
               id: account.id,
@@ -234,7 +239,7 @@ export async function POST(request: NextRequest) {
               accountId: account.accountId,
             },
             publishMediaUrl,
-            caption || title,
+            distCaption,
             async (accessToken, refreshToken) => {
               await db
                 .update(connectedAccounts)

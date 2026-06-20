@@ -13,5 +13,7 @@ services:
         generateValue: true
       - key: DATABASE_URL
         sync: false
+      - key: DIRECT_DATABASE_URL
+        sync: false
       - key: NEXT_PUBLIC_APP_URL
         sync: false

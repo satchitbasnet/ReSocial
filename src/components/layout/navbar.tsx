@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -24,12 +25,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
       )}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-bg text-white font-bold text-lg">
-            R
-          </div>
-          <span className="text-xl font-bold text-gray-900">ReSocial</span>
-        </Link>
+        <Logo />
 
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (

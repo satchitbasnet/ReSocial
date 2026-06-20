@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PLATFORMS } from "@/lib/constants";
+import { Logo } from "@/components/brand/logo";
 
 export function Footer() {
   return (
@@ -7,11 +8,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-bg text-white font-bold">
-                R
-              </div>
-              <span className="text-xl font-bold text-white">ReSocial</span>
+            <div className="mb-4">
+              <Logo variant="light" />
             </div>
             <p className="text-sm leading-relaxed">
               Post once, reach everywhere. The automated content repurposing

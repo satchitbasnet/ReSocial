@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/logo";
 import { Check } from "lucide-react";
 
 const REFERRAL_STORAGE_KEY = "resocial_referral_code";
@@ -72,12 +73,7 @@ function SignupForm() {
     <div className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
         <div className="text-white max-w-md">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 font-bold text-xl">
-              R
-            </div>
-            <span className="text-2xl font-bold">ReSocial</span>
-          </div>
+          <Logo size="lg" variant="light" href={null} className="mb-8" />
           <h2 className="text-3xl font-bold mb-4">Start your free trial</h2>
           <p className="text-white/80 text-lg mb-8">
             Join thousands of creators distributing content across every major
@@ -96,11 +92,8 @@ function SignupForm() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-bg text-white font-bold">
-              R
-            </div>
-            <span className="text-xl font-bold">ReSocial</span>
+          <div className="lg:hidden mb-8">
+            <Logo />
           </div>
 
           <h1 className="text-2xl font-bold text-gray-900 mb-2">

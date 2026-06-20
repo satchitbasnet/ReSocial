@@ -29,6 +29,12 @@
   .gradient-text {
     @apply bg-gradient-to-r from-brand-600 to-accent bg-clip-text text-transparent;
   }
+  .gradient-text-re {
+    background: linear-gradient(135deg, #1f8fff 0%, #8b4dff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
   .gradient-bg {
     @apply bg-gradient-to-br from-brand-600 via-brand-700 to-accent;
   }

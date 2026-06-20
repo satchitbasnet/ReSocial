@@ -38,6 +38,25 @@ export const referralStatusEnum = pgEnum("referral_status", [
   "pending",
   "converted",
 ]);
+export const inboxMessageTypeEnum = pgEnum("inbox_message_type", [
+  "comment",
+  "dm",
+  "mention",
+]);
+export const teamRoleEnum = pgEnum("team_role", ["admin", "editor", "viewer"]);
+export const teamMemberStatusEnum = pgEnum("team_member_status", [
+  "pending",
+  "active",
+]);
+export const approvalStatusEnum = pgEnum("approval_status", [
+  "pending",
+  "approved",
+  "rejected",
+]);
+export const reportFrequencyEnum = pgEnum("report_frequency", [
+  "weekly",
+  "monthly",
+]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -118,6 +137,7 @@ export const distributions = pgTable("distributions", {
   platform: platformEnum("platform").notNull(),
   status: distributionStatusEnum("status").default("pending").notNull(),
   platformPostId: text("platform_post_id"),
+  caption: text("caption"),
   errorMessage: text("error_message"),
   publishedAt: timestamp("published_at"),
 });
@@ -211,6 +231,135 @@ export const postingTimeInsights = pgTable("posting_time_insights", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const inboxMessages = pgTable("inbox_messages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  accountId: uuid("account_id")
+    .notNull()
+    .references(() => connectedAccounts.id, { onDelete: "cascade" }),
+  platform: platformEnum("platform").notNull(),
+  platformMessageId: text("platform_message_id").notNull(),
+  type: inboxMessageTypeEnum("type").default("comment").notNull(),
+  authorName: text("author_name").notNull(),
+  authorAvatar: text("author_avatar"),
+  content: text("content").notNull(),
+  postId: uuid("post_id").references(() => posts.id, { onDelete: "set null" }),
+  distributionId: uuid("distribution_id").references(() => distributions.id, {
+    onDelete: "set null",
+  }),
+  platformPostId: text("platform_post_id"),
+  isRead: boolean("is_read").default(false).notNull(),
+  isReplied: boolean("is_replied").default(false).notNull(),
+  repliedAt: timestamp("replied_at"),
+  assignedToUserId: uuid("assigned_to_user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  receivedAt: timestamp("received_at").defaultNow().notNull(),
+});
+
+export const savedReplies = pgTable("saved_replies", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const trackedHashtags = pgTable("tracked_hashtags", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  hashtag: text("hashtag").notNull(),
+  platform: platformEnum("platform").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const hashtagStats = pgTable("hashtag_stats", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  hashtag: text("hashtag").notNull(),
+  platform: platformEnum("platform").notNull(),
+  statDate: timestamp("stat_date").notNull(),
+  postCount: integer("post_count").default(0).notNull(),
+  avgEngagement: integer("avg_engagement").default(0).notNull(),
+  trendScore: integer("trend_score").default(0).notNull(),
+});
+
+export const teamMembers = pgTable("team_members", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  ownerId: uuid("owner_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  memberId: uuid("member_id").references(() => users.id, { onDelete: "set null" }),
+  email: text("email").notNull(),
+  role: teamRoleEnum("role").default("editor").notNull(),
+  status: teamMemberStatusEnum("status").default("pending").notNull(),
+  inviteToken: text("invite_token"),
+  invitedAt: timestamp("invited_at").defaultNow().notNull(),
+  joinedAt: timestamp("joined_at"),
+});
+
+export const postApprovals = pgTable("post_approvals", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  postId: uuid("post_id")
+    .notNull()
+    .references(() => posts.id, { onDelete: "cascade" }),
+  requestedBy: uuid("requested_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  reviewedBy: uuid("reviewed_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  status: approvalStatusEnum("status").default("pending").notNull(),
+  note: text("note"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const competitorAccounts = pgTable("competitor_accounts", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  platform: platformEnum("platform").notNull(),
+  handle: text("handle").notNull(),
+  displayName: text("display_name"),
+  followerCount: integer("follower_count").default(0).notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const competitorStats = pgTable("competitor_stats", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  competitorId: uuid("competitor_id")
+    .notNull()
+    .references(() => competitorAccounts.id, { onDelete: "cascade" }),
+  statDate: timestamp("stat_date").notNull(),
+  followerCount: integer("follower_count").default(0).notNull(),
+  avgViews: integer("avg_views").default(0).notNull(),
+  avgEngagement: integer("avg_engagement").default(0).notNull(),
+  postsPublished: integer("posts_published").default(0).notNull(),
+});
+
+export const reportSchedules = pgTable("report_schedules", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  frequency: reportFrequencyEnum("frequency").notNull(),
+  dayOfWeek: integer("day_of_week").default(1).notNull(),
+  dayOfMonth: integer("day_of_month").default(1).notNull(),
+  email: text("email").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  lastSentAt: timestamp("last_sent_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const affiliates = pgTable("affiliates", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("user_id")
@@ -251,3 +400,12 @@ export type DriveConnection = typeof driveConnections.$inferSelect;
 export type Workflow = typeof workflows.$inferSelect;
 export type Post = typeof posts.$inferSelect;
 export type Distribution = typeof distributions.$inferSelect;
+export type InboxMessage = typeof inboxMessages.$inferSelect;
+export type SavedReply = typeof savedReplies.$inferSelect;
+export type TrackedHashtag = typeof trackedHashtags.$inferSelect;
+export type HashtagStat = typeof hashtagStats.$inferSelect;
+export type TeamMember = typeof teamMembers.$inferSelect;
+export type PostApproval = typeof postApprovals.$inferSelect;
+export type CompetitorAccount = typeof competitorAccounts.$inferSelect;
+export type CompetitorStat = typeof competitorStats.$inferSelect;
+export type ReportSchedule = typeof reportSchedules.$inferSelect;

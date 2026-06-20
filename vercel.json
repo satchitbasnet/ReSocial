@@ -1,0 +1,19 @@
+{
+  "crons": [
+    {
+      "path": "/api/reports/send",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "functions": {
+    "src/app/api/posts/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/upload/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/reports/send/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

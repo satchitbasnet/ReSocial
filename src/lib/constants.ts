@@ -11,6 +11,17 @@ export const PLATFORMS = [
 
 export type PlatformId = (typeof PLATFORMS)[number]["id"];
 
+export const PLATFORM_CAPTION_LIMITS: Record<PlatformId, number> = {
+  tiktok: 2200,
+  youtube: 5000,
+  instagram: 2200,
+  facebook: 63206,
+  linkedin: 3000,
+  twitter: 280,
+  pinterest: 500,
+  snapchat: 250,
+};
+
 export const PLANS = {
   trial: {
     name: "Free Trial",

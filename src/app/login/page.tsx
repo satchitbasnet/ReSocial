@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/brand/logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -41,12 +42,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex">
       <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
         <div className="text-white max-w-md">
-          <div className="flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 font-bold text-xl">
-              R
-            </div>
-            <span className="text-2xl font-bold">ReSocial</span>
-          </div>
+          <Logo size="lg" variant="light" href={null} className="mb-8" />
           <h2 className="text-3xl font-bold mb-4">Welcome back</h2>
           <p className="text-white/80 text-lg">
             Post once, reach everywhere. Manage your content distribution from
@@ -57,12 +53,7 @@ export default function LoginPage() {
 
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl gradient-bg text-white font-bold">
-              R
-            </div>
-            <span className="text-xl font-bold">ReSocial</span>
-          </div>
+          <Logo className="mb-8" />
 
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Log in</h1>
           <p className="text-gray-600 mb-8">

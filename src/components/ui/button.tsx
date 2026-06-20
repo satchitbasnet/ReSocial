@@ -8,7 +8,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants = {
-  primary: "gradient-bg text-white hover:opacity-90 shadow-lg shadow-brand-500/25",
+  primary:
+    "bg-gradient-to-br from-brand-600 via-brand-700 to-accent text-white hover:opacity-90 shadow-lg shadow-brand-500/25",
   secondary: "bg-gray-900 text-white hover:bg-gray-800",
   outline: "border-2 border-brand-600 text-brand-600 hover:bg-brand-50",
   ghost: "text-gray-600 hover:text-gray-900 hover:bg-gray-100",

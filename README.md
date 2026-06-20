@@ -17,7 +17,7 @@ Inspired by [Repurpose.io](https://repurpose.io), built as a full-stack Next.js 
 
 - **Next.js 15** (App Router, Server Actions)
 - **TypeScript** + **Tailwind CSS 4**
-- **PostgreSQL** (Neon) + **Drizzle ORM**
+- **PostgreSQL** (Supabase) + **Drizzle ORM**
 - **JWT auth** with httpOnly cookies
 
 ## Getting Started
@@ -40,7 +40,8 @@ Required variables:
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | Neon PostgreSQL connection string |
+| `DATABASE_URL` | Supabase **transaction pooler** URI (port 6543, `?pgbouncer=true`) |
+| `DIRECT_DATABASE_URL` | Supabase **direct** URI (port 5432) — for `npm run db:push` only |
 | `AUTH_SECRET` | Random 32+ character secret for JWT signing |
 | `NEXT_PUBLIC_APP_URL` | App URL (e.g. `http://localhost:3000`) |
 
@@ -50,10 +51,23 @@ Generate an auth secret:
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-### 3. Set up the database
+### 3. Set up Supabase database
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. In **Project Settings → Database**, copy:
+   - **Transaction pooler** URI → `DATABASE_URL` (port **6543**, add `?pgbouncer=true`)
+   - **Direct connection** URI → `DIRECT_DATABASE_URL` (port **5432**)
+3. Push the Drizzle schema:
 
 ```bash
 npm run db:push
+```
+
+Alternatively, apply SQL migrations via Supabase CLI:
+
+```bash
+npx supabase link --project-ref YOUR_PROJECT_REF
+npx supabase db push
 ```
 
 ### 4. Run the dev server
