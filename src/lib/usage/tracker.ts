@@ -125,6 +125,18 @@ async function getOrCreateCurrentMeter(userId: string) {
     return existing;
   }
 
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+
+  if (!user) {
+    throw new Error(
+      "Cannot create usage meter: user account not found. Please log in again."
+    );
+  }
+
   const [created] = await db
     .insert(usageMeters)
     .values({
@@ -135,7 +147,9 @@ async function getOrCreateCurrentMeter(userId: string) {
       postsPublished: 0,
       capWarningsSent: 0,
     })
-    .onConflictDoNothing()
+    .onConflictDoNothing({
+      target: [usageMeters.userId, usageMeters.periodStart],
+    })
     .returning();
 
   if (created) {
@@ -153,7 +167,11 @@ async function getOrCreateCurrentMeter(userId: string) {
     )
     .limit(1);
 
-  return race!;
+  if (!race) {
+    throw new Error("Failed to create or load usage meter for billing period.");
+  }
+
+  return race;
 }
 
 export async function getUsageStatus(userId: string): Promise<UsageStatus> {

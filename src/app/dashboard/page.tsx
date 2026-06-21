@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getSession } from "@/lib/auth";
+import { getValidSession } from "@/lib/auth";
 import { getDashboardStats } from "@/lib/dashboard";
 import { Button } from "@/components/ui/button";
 import { Upload, Link2, BarChart3, Zap, Workflow } from "lucide-react";
@@ -8,7 +8,7 @@ import { PlatformIcon } from "@/components/ui/platform-icon";
 import { ProcessingUsageBar } from "@/components/dashboard/processing-usage-bar";
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  const session = await getValidSession();
   if (!session) return null;
 
   const stats = await getDashboardStats(session.userId);
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
         {cards.map((card) => (
           <div
             key={card.label}
-            className="bg-white rounded-2xl p-6 border border-gray-100"
+            className="glass-card p-6"
           >
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm text-gray-500">{card.label}</span>
@@ -84,7 +84,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Quick Actions</h2>
           <div className="space-y-3">
             <Link
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Supported Platforms</h2>
           <div className="grid grid-cols-4 gap-3">
             {PLATFORMS.map((p) => (

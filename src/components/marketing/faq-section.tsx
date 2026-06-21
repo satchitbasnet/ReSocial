@@ -9,7 +9,7 @@ export function FAQSection() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="py-24 bg-gray-50">
+    <section className="py-24">
       <div className="mx-auto max-w-3xl px-6">
         <h2 className="font-display text-3xl font-bold text-gray-900 text-center mb-12">
           Questions? We&apos;ve Got Answers.
@@ -19,7 +19,7 @@ export function FAQSection() {
           {FAQ.map((item, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl border border-gray-100 overflow-hidden"
+              className="glass-card overflow-hidden"
             >
               <button
                 className="w-full flex items-center justify-between p-5 text-left"

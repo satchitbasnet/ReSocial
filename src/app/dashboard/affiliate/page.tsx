@@ -133,7 +133,7 @@ export default function AffiliatePage() {
         <p className="text-red-600 text-sm mb-4">{error}</p>
       )}
 
-      <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-6">
+      <div className="glass-card p-6 mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Your Referral Link
         </label>
@@ -222,7 +222,7 @@ function StatCard({
   color: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl p-5 border border-gray-100">
+    <div className="glass-card p-5">
       <div className="flex items-center justify-between mb-3">
         <span className="text-sm text-gray-500">{label}</span>
         <div className={cn("p-2 rounded-lg", color)}>

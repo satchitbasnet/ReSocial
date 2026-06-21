@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from "crypto";
 import { getAppUrl } from "@/lib/config";
 import { fetchMediaBuffer } from "@/lib/r2";
 
@@ -51,7 +52,30 @@ export function getTikTokRedirectUri(): string {
   return `${getAppUrl()}/api/auth/callback/tiktok`;
 }
 
-export function buildTikTokAuthUrl(state: string): string {
+export interface TikTokPkcePair {
+  codeVerifier: string;
+  codeChallenge: string;
+}
+
+/** TikTok PKCE: SHA256(code_verifier) as lowercase hex (not base64url). */
+export function generateTikTokPkce(): TikTokPkcePair {
+  const charset =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~";
+  const bytes = randomBytes(64);
+  let codeVerifier = "";
+  for (let i = 0; i < 64; i++) {
+    codeVerifier += charset[bytes[i] % charset.length];
+  }
+  const codeChallenge = createHash("sha256")
+    .update(codeVerifier)
+    .digest("hex");
+  return { codeVerifier, codeChallenge };
+}
+
+export function buildTikTokAuthUrl(
+  state: string,
+  codeChallenge: string
+): string {
   const { clientKey } = getTikTokCredentials();
   const params = new URLSearchParams({
     client_key: clientKey,
@@ -59,6 +83,8 @@ export function buildTikTokAuthUrl(state: string): string {
     scope: TIKTOK_SCOPES,
     redirect_uri: getTikTokRedirectUri(),
     state,
+    code_challenge: codeChallenge,
+    code_challenge_method: "S256",
   });
   return `${TIKTOK_AUTH_URL}?${params.toString()}`;
 }
@@ -84,7 +110,10 @@ async function parseTokenResponse(res: Response): Promise<TikTokTokens> {
   };
 }
 
-export async function exchangeTikTokCode(code: string): Promise<TikTokTokens> {
+export async function exchangeTikTokCode(
+  code: string,
+  codeVerifier: string
+): Promise<TikTokTokens> {
   const { clientKey, clientSecret } = getTikTokCredentials();
 
   const res = await fetch(TIKTOK_TOKEN_URL, {
@@ -99,6 +128,7 @@ export async function exchangeTikTokCode(code: string): Promise<TikTokTokens> {
       code,
       grant_type: "authorization_code",
       redirect_uri: getTikTokRedirectUri(),
+      code_verifier: codeVerifier,
     }),
   });
 

@@ -137,7 +137,7 @@ export default function BenchmarkingPage() {
         ))}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+      <div className="glass-card p-5 mb-6">
         <p className="text-sm font-medium text-gray-700 mb-3">Add Competitor</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
@@ -163,7 +163,7 @@ export default function BenchmarkingPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-x-auto">
+      <div className="glass-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-gray-500 border-b border-gray-100">

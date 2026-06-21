@@ -159,7 +159,7 @@ export function AnalyticsDashboard() {
           <BarChart3 size={24} className="text-brand-600" />
           Analytics
         </h1>
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+        <div className="text-center py-20 glass-card">
           <BarChart3 size={48} className="mx-auto text-gray-300 mb-4" />
           <h2 className="text-lg font-semibold text-gray-900 mb-2">
             No Analytics Data Yet
@@ -266,12 +266,12 @@ export function AnalyticsDashboard() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-6">Views by Platform</h2>
           <PlatformBarChart data={data?.viewsByPlatform ?? []} />
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-6">Best Time to Post</h2>
           <BestTimeToPost
             slots={data?.bestTimeToPost ?? []}
@@ -280,7 +280,7 @@ export function AnalyticsDashboard() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl p-6 border border-gray-100">
+      <div className="glass-card p-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="font-semibold text-gray-900">Top Performing Posts</h2>
           <Link

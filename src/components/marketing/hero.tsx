@@ -17,11 +17,12 @@ export function Hero({
   return (
     <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
       <div className="absolute inset-0 gradient-bg opacity-[0.03]" />
-      <div className="absolute top-20 right-0 w-96 h-96 bg-brand-400/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl" />
+      <div className="absolute top-20 right-0 w-96 h-96 bg-brand-400/20 rounded-full glass-orb" />
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-accent/20 rounded-full glass-orb" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-indigo/10 rounded-full glass-orb" />
 
       <div className="relative mx-auto max-w-7xl px-6 text-center">
-        <div className="inline-flex items-center gap-2 bg-brand-50 text-brand-700 text-sm font-display font-medium px-4 py-1.5 rounded-full mb-6">
+        <div className="inline-flex items-center gap-2 glass-badge text-brand-700 text-sm font-display font-medium px-4 py-1.5 rounded-full mb-6">
           <Zap size={14} />
           {badge}
         </div>

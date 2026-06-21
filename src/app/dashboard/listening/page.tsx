@@ -91,7 +91,7 @@ export default function ListeningPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+      <div className="glass-card p-5 mb-6">
         <p className="text-sm font-medium text-gray-700 mb-3">Add Hashtag</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -124,7 +124,7 @@ export default function ListeningPage() {
           <Loader2 className="animate-spin text-brand-500" size={32} />
         </div>
       ) : hashtags.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100 text-gray-500 text-sm">
+        <div className="text-center py-16 glass-card text-gray-500 text-sm">
           No hashtags tracked yet. Add one above to start monitoring.
         </div>
       ) : (
@@ -134,7 +134,7 @@ export default function ListeningPage() {
             return (
               <div
                 key={tag.id}
-                className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+                className="glass-card p-5 flex flex-col sm:flex-row sm:items-center gap-4"
               >
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <PlatformIcon platform={tag.platform} size={22} />

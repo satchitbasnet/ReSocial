@@ -91,7 +91,7 @@ function SignupForm() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+        <div className="glass-panel w-full max-w-md p-8">
           <div className="lg:hidden mb-8">
             <Logo />
           </div>
@@ -128,7 +128,7 @@ function SignupForm() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="glass-input"
                 placeholder="Jane Doe"
               />
             </div>
@@ -142,7 +142,7 @@ function SignupForm() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="glass-input"
                 placeholder="you@example.com"
               />
             </div>
@@ -157,7 +157,7 @@ function SignupForm() {
                 minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="glass-input"
                 placeholder="Min. 8 characters"
               />
             </div>

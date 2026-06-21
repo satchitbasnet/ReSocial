@@ -19,7 +19,7 @@ export default function HomePage() {
           subtitle="Connect with all major social media platforms. Upload once and automatically post videos, stories, and audio across TikTok, YouTube, Instagram, Facebook, LinkedIn, X, and more."
         />
 
-        <section className="py-16 border-y border-gray-100 bg-white">
+        <section className="py-16 border-y glass-divider">
           <div className="mx-auto max-w-7xl px-6 text-center">
             <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-8">
               Trusted Integration Partners
@@ -28,7 +28,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="py-20 bg-white">
+        <section className="py-20">
           <div className="mx-auto max-w-7xl px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>

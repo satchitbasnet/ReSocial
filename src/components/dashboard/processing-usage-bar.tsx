@@ -1,4 +1,4 @@
-import { getUsageStatus, type UsageStatus } from "@/lib/usage/tracker";
+import { type UsageStatus } from "@/lib/usage/tracker";
 
 const SHOW_THRESHOLD_PERCENT = 70;
 
@@ -14,7 +14,7 @@ export function ProcessingUsageBar({ usage }: ProcessingUsageBarProps) {
   const barWidth = Math.min(usage.percentUsed, 100);
 
   return (
-    <div className="mb-6 bg-white border border-gray-100 rounded-xl p-4">
+    <div className="mb-6 glass-card p-4">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm font-medium text-gray-900">
           Processing Usage This Month

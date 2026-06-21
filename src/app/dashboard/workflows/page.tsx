@@ -97,7 +97,7 @@ export default function WorkflowsPage() {
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-2xl p-6 border border-gray-100 mb-6">
+        <div className="glass-card p-6 mb-6">
           <h3 className="font-medium text-gray-900 mb-4">Create Workflow</h3>
           <div className="space-y-4">
             <input
@@ -166,7 +166,7 @@ export default function WorkflowsPage() {
       {loading ? (
         <p className="text-gray-500">Loading Workflows...</p>
       ) : items.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+        <div className="text-center py-16 glass-card">
           <Workflow size={40} className="mx-auto text-gray-300 mb-4" />
           <p className="text-gray-500 mb-4">No Workflows Yet.</p>
           <Button size="sm" onClick={() => setShowForm(true)}>
@@ -178,7 +178,7 @@ export default function WorkflowsPage() {
           {items.map((wf) => (
             <div
               key={wf.id}
-              className="bg-white rounded-2xl p-6 border border-gray-100"
+              className="glass-card p-6"
             >
               <div className="flex items-start justify-between">
                 <div>

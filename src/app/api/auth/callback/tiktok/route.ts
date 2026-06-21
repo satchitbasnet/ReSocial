@@ -11,6 +11,7 @@ import {
 } from "@/lib/platforms/tiktok";
 
 const STATE_COOKIE = "tiktok_oauth_state";
+const PKCE_COOKIE = "tiktok_pkce_verifier";
 
 export async function GET(request: NextRequest) {
   const appUrl = getAppUrl();
@@ -34,15 +35,17 @@ export async function GET(request: NextRequest) {
 
   const cookieStore = await cookies();
   const savedState = cookieStore.get(STATE_COOKIE)?.value;
+  const codeVerifier = cookieStore.get(PKCE_COOKIE)?.value;
   cookieStore.delete(STATE_COOKIE);
+  cookieStore.delete(PKCE_COOKIE);
 
-  if (!code || !state || !savedState || state !== savedState) {
+  if (!code || !state || !savedState || state !== savedState || !codeVerifier) {
     accountsUrl.searchParams.set("error", "invalid_state");
     return NextResponse.redirect(accountsUrl);
   }
 
   try {
-    const tokens = await exchangeTikTokCode(code);
+    const tokens = await exchangeTikTokCode(code, codeVerifier);
     const userInfo = await fetchTikTokUserInfo(tokens.accessToken);
 
     const db = getDb();

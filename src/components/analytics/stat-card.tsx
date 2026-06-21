@@ -22,7 +22,7 @@ export function StatCard({
   const isPositive = (changePercent ?? 0) >= 0;
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-100">
+    <div className="glass-card p-6">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm text-gray-500">{label}</span>
         <div className={cn("p-2 rounded-lg", color)}>

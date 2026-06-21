@@ -63,7 +63,7 @@ export default function HistoryPage() {
       </p>
 
       {posts.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
+        <div className="text-center py-20 glass-card">
           <p className="text-gray-500 mb-4">No Posts Yet.</p>
           <a
             href="/dashboard/upload"
@@ -77,7 +77,7 @@ export default function HistoryPage() {
           {posts.map((post) => (
             <div
               key={post.id}
-              className="bg-white rounded-2xl p-6 border border-gray-100"
+              className="glass-card p-6"
             >
               <div className="flex gap-4">
                 {post.mediaType === "video" ? (

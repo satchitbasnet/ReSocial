@@ -52,7 +52,7 @@ export default function LoginPage() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
+        <div className="glass-panel w-full max-w-md p-8">
           <Logo className="mb-8" />
 
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Log In</h1>
@@ -79,7 +79,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="glass-input"
                 placeholder="you@example.com"
               />
             </div>
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                className="glass-input"
                 placeholder="••••••••"
               />
             </div>

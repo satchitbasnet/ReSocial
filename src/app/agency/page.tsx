@@ -48,7 +48,7 @@ export default function AgencyPage() {
               {useCases.map((uc) => (
                 <div
                   key={uc.title}
-                  className="bg-white rounded-2xl p-8 border border-gray-100"
+                  className="glass-card p-8"
                 >
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 mb-5">
                     <uc.icon size={24} />

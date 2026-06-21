@@ -62,7 +62,7 @@ export default function ReportsPage() {
         Get weekly or monthly performance summaries delivered to your inbox.
       </p>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5 mb-6">
+      <div className="glass-card p-6 space-y-5 mb-6">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
           <input
@@ -137,7 +137,7 @@ export default function ReportsPage() {
       </div>
 
       {preview && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6">
+        <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <Mail size={18} /> Report preview
           </h2>

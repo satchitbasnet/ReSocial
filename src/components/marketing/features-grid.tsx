@@ -19,7 +19,7 @@ const iconMap = {
 
 export function FeaturesGrid() {
   return (
-    <section className="py-24 bg-gray-50">
+    <section className="py-24">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-16">
           <p className="text-brand-600 font-semibold text-sm uppercase tracking-wider mb-3">
@@ -40,7 +40,7 @@ export function FeaturesGrid() {
             return (
               <div
                 key={feature.title}
-                className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg hover:border-brand-100 transition-all duration-300"
+                className="glass-card glass-card-interactive p-8"
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-brand-600 mb-5">
                   <Icon size={24} />

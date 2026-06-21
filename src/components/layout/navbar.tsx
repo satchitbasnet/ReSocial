@@ -21,7 +21,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all",
-        transparent ? "bg-transparent" : "bg-white/90 backdrop-blur-md border-b border-gray-100"
+        transparent ? "bg-transparent" : "glass-nav"
       )}
     >
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
@@ -58,7 +58,7 @@ export function Navbar({ transparent = false }: { transparent?: boolean }) {
       </nav>
 
       {open && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-6 py-4 space-y-4">
+        <div className="md:hidden border-t glass-divider glass px-6 py-4 space-y-4">
           {navLinks.map((link) => (
             <Link
               key={link.href}

@@ -100,7 +100,7 @@ export default function TeamPage() {
         Invite team members and assign roles. Editors need admin approval before publishing.
       </p>
 
-      <div className="bg-white rounded-2xl border border-gray-100 p-5 mb-6">
+      <div className="glass-card p-5 mb-6">
         <p className="text-sm font-medium text-gray-700 mb-3">Invite Member</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
@@ -138,7 +138,7 @@ export default function TeamPage() {
         )}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 divide-y divide-gray-50">
+      <div className="glass-card divide-y divide-gray-50">
         {members.length === 0 ? (
           <p className="text-center text-gray-500 text-sm py-12">No Team Members Yet.</p>
         ) : (

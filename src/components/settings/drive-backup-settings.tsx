@@ -37,7 +37,7 @@ export function DriveBackupSettings({
   }
 
   return (
-    <div className="bg-white rounded-2xl p-6 border border-gray-100">
+    <div className="glass-card p-6">
       <div className="flex items-start gap-3 mb-4">
         <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
           <HardDrive size={20} />

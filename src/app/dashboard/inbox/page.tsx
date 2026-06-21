@@ -193,7 +193,7 @@ export default function InboxPage() {
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-4">
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+          <div className="glass-card p-4 space-y-3">
             <p className="text-xs font-semibold text-gray-500 uppercase">Filters</p>
             <select
               value={platformFilter}
@@ -228,7 +228,7 @@ export default function InboxPage() {
             </select>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 p-4">
+          <div className="glass-card p-4">
             <p className="text-xs font-semibold text-gray-500 uppercase mb-3 flex items-center gap-1.5">
               <Bookmark size={14} /> Saved replies
             </p>
@@ -278,7 +278,7 @@ export default function InboxPage() {
         </div>
 
         <div className="lg:col-span-2 grid md:grid-cols-2 gap-4 min-h-[480px]">
-          <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden flex flex-col">
+          <div className="glass-card overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-100 flex items-center gap-2">
               <Inbox size={18} className="text-brand-600" />
               <span className="font-semibold text-gray-900">Messages</span>
@@ -340,7 +340,7 @@ export default function InboxPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-100 flex flex-col">
+          <div className="glass-card flex flex-col">
             {selected ? (
               <>
                 <div className="p-4 border-b border-gray-100 flex-1 overflow-y-auto">

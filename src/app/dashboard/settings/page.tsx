@@ -41,7 +41,7 @@ export default async function SettingsPage() {
       </Suspense>
 
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Account</h2>
           <dl className="space-y-3">
             <div className="flex justify-between">
@@ -55,7 +55,7 @@ export default async function SettingsPage() {
           </dl>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Subscription</h2>
           <div className="flex items-center justify-between mb-4">
             <div>

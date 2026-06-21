@@ -344,7 +344,7 @@ export default function UploadPage() {
       </div>
 
       {selectedPlatforms.length > 0 && (
-        <div className="mb-8 bg-white rounded-2xl p-5 border border-gray-100">
+        <div className="mb-8 glass-card p-5">
           <div className="flex items-center justify-between mb-4">
             <label className="text-sm font-medium text-gray-700">
               Per-platform captions
@@ -409,7 +409,7 @@ export default function UploadPage() {
         </div>
       )}
 
-      <div className="mb-8 bg-white rounded-2xl p-5 border border-gray-100">
+      <div className="mb-8 glass-card p-5">
         <label className="block text-sm font-medium text-gray-700 mb-3">
           When to publish
         </label>

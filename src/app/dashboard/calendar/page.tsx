@@ -210,7 +210,7 @@ export default function CalendarPage() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <div className="glass-card shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 p-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <button

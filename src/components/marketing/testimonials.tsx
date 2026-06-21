@@ -3,7 +3,7 @@ import { Quote } from "lucide-react";
 
 export function Testimonials() {
   return (
-    <section className="py-24 bg-white">
+    <section className="py-24">
       <div className="mx-auto max-w-7xl px-6">
         <div className="text-center mb-16">
           <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -15,7 +15,7 @@ export function Testimonials() {
           {TESTIMONIALS.map((t) => (
             <div
               key={t.name}
-              className="bg-gray-50 rounded-2xl p-8 border border-gray-100"
+              className="glass-card p-8"
             >
               <Quote size={32} className="text-brand-200 mb-4" />
               <p className="text-gray-700 italic mb-6 leading-relaxed">

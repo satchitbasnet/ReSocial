@@ -154,7 +154,7 @@ function AccountsContent() {
       )}
 
       {connecting && !OAUTH_PLATFORMS.has(connecting) && (
-        <div className="mb-6 bg-white rounded-2xl p-6 border border-gray-100">
+        <div className="mb-6 glass-card p-6">
           <h3 className="font-medium text-gray-900 mb-3">
             Connect {PLATFORMS.find((p) => p.id === connecting)?.name}
           </h3>
@@ -193,7 +193,7 @@ function AccountsContent() {
             <div
               key={platform.id}
               className={cn(
-                "bg-white rounded-2xl p-5 border transition-all",
+                "glass-card p-5 transition-all",
                 isConnected ? "border-green-200" : "border-gray-100"
               )}
             >

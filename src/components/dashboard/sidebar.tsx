@@ -69,7 +69,7 @@ export function DashboardSidebar({
 
   const sidebar = (
     <div className="flex flex-col h-full">
-      <div className="p-6 border-b border-gray-100">
+      <div className="p-6 border-b glass-divider">
         <Logo size="sm" />
       </div>
 
@@ -84,10 +84,10 @@ export function DashboardSidebar({
               href={item.href}
               onClick={() => setMobileOpen(false)}
               className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors",
+                "glass-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium",
                 isActive
-                  ? "bg-brand-50 text-brand-700"
-                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                  ? "glass-nav-item-active text-brand-700"
+                  : "text-gray-600 hover:text-gray-900"
               )}
             >
               <item.icon size={18} />
@@ -102,14 +102,14 @@ export function DashboardSidebar({
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-100">
+      <div className="p-4 border-t glass-divider">
         <div className="px-3 py-2 mb-2">
           <p className="text-sm font-medium text-gray-900 truncate">{userName}</p>
           <p className="text-xs text-gray-500 capitalize">{userPlan} Plan</p>
         </div>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 w-full"
+          className="glass-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-600 hover:text-gray-900 w-full"
         >
           <LogOut size={18} />
           Log Out
@@ -121,7 +121,7 @@ export function DashboardSidebar({
   return (
     <>
       <button
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow border"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 glass rounded-lg shadow-sm"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -136,7 +136,7 @@ export function DashboardSidebar({
 
       <aside
         className={cn(
-          "fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-100 transform transition-transform lg:transform-none",
+          "fixed lg:static inset-y-0 left-0 z-40 w-64 glass-sidebar transform transition-transform lg:transform-none",
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >

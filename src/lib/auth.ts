@@ -1,6 +1,9 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
+import { getDb } from "@/lib/db";
+import { users } from "@/lib/db/schema";
 
 const COOKIE_NAME = "resocial_session";
 const SESSION_DURATION = 60 * 60 * 24 * 14; // 14 days
@@ -57,6 +60,25 @@ export async function getSession(): Promise<SessionPayload | null> {
   } catch {
     return null;
   }
+}
+
+/** Returns false when the JWT user id no longer exists (e.g. after a DB reset). */
+export async function userExistsInDb(userId: string): Promise<boolean> {
+  const db = getDb();
+  const [user] = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  return !!user;
+}
+
+/** Session cookie that matches a live `users` row (read-only; does not mutate cookies). */
+export async function getValidSession(): Promise<SessionPayload | null> {
+  const session = await getSession();
+  if (!session) return null;
+  if (!(await userExistsInDb(session.userId))) return null;
+  return session;
 }
 
 export async function destroySession() {

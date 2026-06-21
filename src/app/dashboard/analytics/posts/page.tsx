@@ -145,7 +145,7 @@ export default function PostPerformancePage() {
         </select>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <div className="glass-card overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="animate-spin text-brand-500" size={32} />

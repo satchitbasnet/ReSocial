@@ -50,12 +50,12 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
           </p>
 
           {showToggle && (
-            <div className="inline-flex items-center gap-3 mt-6 bg-gray-100 rounded-full p-1">
+            <div className="inline-flex items-center gap-3 mt-6 glass rounded-full p-1">
               <button
                 onClick={() => setYearly(false)}
                 className={cn(
                   "px-5 py-2 rounded-full text-sm font-medium transition-all",
-                  !yearly ? "bg-white shadow text-gray-900" : "text-gray-500"
+                  !yearly ? "glass-nav-item-active shadow-sm text-gray-900" : "text-gray-500"
                 )}
               >
                 Monthly
@@ -64,7 +64,7 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
                 onClick={() => setYearly(true)}
                 className={cn(
                   "px-5 py-2 rounded-full text-sm font-medium transition-all",
-                  yearly ? "bg-white shadow text-gray-900" : "text-gray-500"
+                  yearly ? "glass-nav-item-active shadow-sm text-gray-900" : "text-gray-500"
                 )}
               >
                 Yearly <span className="text-brand-600">(Save 17%)</span>
@@ -84,10 +84,10 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
               <div
                 key={key}
                 className={cn(
-                  "relative rounded-2xl p-8 border transition-all duration-300",
+                  "relative glass-card glass-card-interactive p-8",
                   isPopular
-                    ? "border-brand-500 shadow-xl shadow-brand-500/10 scale-105 bg-white"
-                    : "border-gray-200 bg-white hover:shadow-lg"
+                    ? "border-brand-400/40 shadow-xl shadow-brand-500/15 scale-105"
+                    : ""
                 )}
               >
                 {isPopular && (
