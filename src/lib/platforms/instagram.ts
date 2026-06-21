@@ -7,10 +7,8 @@ const META_AUTH_URL = `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`;
 const INSTAGRAM_SCOPES = [
   "instagram_basic",
   "instagram_content_publish",
-  "instagram_manage_insights",
-  "instagram_manage_comments",
-  "pages_read_engagement",
   "pages_show_list",
+  "pages_read_engagement",
 ].join(",");
 
 export interface MetaTokens {
@@ -75,33 +73,40 @@ export function buildInstagramAuthUrl(state: string): string {
     response_type: "code",
     scope: INSTAGRAM_SCOPES,
     state,
+    display: "page",
+    extras: JSON.stringify({ setup: { channel: "IG_API_ONBOARDING" } }),
   });
   return `${META_AUTH_URL}?${params.toString()}`;
 }
 
 export async function exchangeInstagramCode(code: string): Promise<MetaTokens> {
   const { clientId, clientSecret } = getInstagramCredentials();
-  const url = `${GRAPH_BASE}/oauth/access_token?${new URLSearchParams({
-    client_id: clientId,
-    client_secret: clientSecret,
-    redirect_uri: getInstagramRedirectUri(),
-    code,
-  })}`;
 
-  const res = await fetch(url);
+  const res = await fetch(`${GRAPH_BASE}/oauth/access_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: clientId,
+      client_secret: clientSecret,
+      redirect_uri: getInstagramRedirectUri(),
+      code,
+    }),
+  });
   const body = await res.json();
   if (!res.ok || body.error) {
     throw new Error(body.error?.message || "Instagram token exchange failed");
   }
 
-  const longLived = await fetch(
-    `${GRAPH_BASE}/oauth/access_token?${new URLSearchParams({
+  const longLived = await fetch(`${GRAPH_BASE}/oauth/access_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
       grant_type: "fb_exchange_token",
       client_id: clientId,
       client_secret: clientSecret,
       fb_exchange_token: body.access_token,
-    })}`
-  );
+    }),
+  });
   const longBody = await longLived.json();
   if (!longLived.ok || longBody.error) {
     return { accessToken: body.access_token, expiresIn: body.expires_in };
@@ -138,12 +143,18 @@ export async function fetchInstagramAccountInfo(
       access_token: string;
       instagram_business_account?: { id: string };
     }>;
-  }>("/me/accounts?fields=id,name,access_token,instagram_business_account", accessToken);
+  }>("/me/accounts?fields=id,name,access_token,instagram_business_account&limit=100", accessToken);
 
-  const page = pages.data?.find((p) => p.instagram_business_account?.id);
+  if (!pages.data?.length) {
+    throw new Error(
+      "No Facebook Pages found. Create a Facebook Page, then link your Instagram Business or Creator account to it."
+    );
+  }
+
+  const page = pages.data.find((p) => p.instagram_business_account?.id);
   if (!page?.instagram_business_account) {
     throw new Error(
-      "No Instagram Business account found. Connect a Business/Creator account to a Facebook Page."
+      "No Instagram Business or Creator account is linked to your Facebook Page. In Instagram, switch to a Professional account, then connect it to your Page in Meta Business Suite."
     );
   }
 

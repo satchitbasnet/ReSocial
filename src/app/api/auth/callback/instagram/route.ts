@@ -93,13 +93,23 @@ export async function GET(request: NextRequest) {
       accountId: accountRowId,
       platform: "instagram",
       followerCount: account.followerCount,
+    }).catch((err) => {
+      console.error("Instagram follower snapshot insert failed:", err);
     });
 
     accountsUrl.searchParams.set("connected", "instagram");
     return NextResponse.redirect(accountsUrl);
   } catch (err) {
     console.error("Instagram OAuth callback error:", err);
-    accountsUrl.searchParams.set("error", "instagram_oauth_failed");
+    const message =
+      err instanceof Error ? err.message : "Instagram authorization failed.";
+
+    if (message.includes("No Instagram Business") || message.includes("No Facebook Pages")) {
+      accountsUrl.searchParams.set("error", "instagram_no_business");
+    } else {
+      accountsUrl.searchParams.set("error", "instagram_oauth_failed");
+      accountsUrl.searchParams.set("error_detail", message.slice(0, 300));
+    }
     return NextResponse.redirect(accountsUrl);
   }
 }

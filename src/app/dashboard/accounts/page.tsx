@@ -64,6 +64,7 @@ function AccountsContent() {
         message: `${name} account connected successfully.`,
       });
     } else if (error) {
+      const errorDetail = searchParams.get("error_detail");
       const messages: Record<string, string> = {
         tiktok_config:
           "TikTok is not configured. Add TIKTOK_CLIENT_KEY and TIKTOK_CLIENT_SECRET.",
@@ -76,7 +77,9 @@ function AccountsContent() {
         tiktok_oauth_failed: "TikTok authorization failed. Please try again.",
         youtube_oauth_failed: "YouTube authorization failed. Please try again.",
         instagram_oauth_failed:
-          "Instagram authorization failed. Please try again.",
+          errorDetail ?? "Instagram authorization failed. Please try again.",
+        instagram_no_business:
+          "No Instagram Business or Creator account is linked to your Facebook Page. Switch to a Professional account in Instagram, then connect it to your Page in Meta Business Suite.",
         facebook_oauth_failed: "Facebook authorization failed. Please try again.",
         facebook_no_pages:
           "No Facebook Pages found. Create a Page and try again.",
