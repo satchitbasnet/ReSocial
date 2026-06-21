@@ -7,7 +7,6 @@ const META_AUTH_URL = `https://www.facebook.com/${GRAPH_VERSION}/dialog/oauth`;
 const FACEBOOK_SCOPES = [
   "pages_manage_posts",
   "pages_read_engagement",
-  "pages_manage_engagement",
   "pages_show_list",
 ].join(",");
 
