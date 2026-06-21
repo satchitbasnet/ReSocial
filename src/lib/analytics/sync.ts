@@ -21,6 +21,13 @@ import {
   simulateNewFollowers,
 } from "@/lib/analytics/metrics";
 import type { PlatformId } from "@/lib/constants";
+import { PLATFORMS } from "@/lib/constants";
+
+const ACTIVE_PLATFORM_IDS = new Set(PLATFORMS.map((p) => p.id));
+
+function isActivePlatform(platform: string): platform is PlatformId {
+  return ACTIVE_PLATFORM_IDS.has(platform as PlatformId);
+}
 
 function startOfDay(d: Date): Date {
   const x = new Date(d);
@@ -326,6 +333,7 @@ export async function fullSyncForUser(userId: string): Promise<void> {
     .where(eq(postMetrics.userId, userId));
 
   for (const m of metrics) {
+    if (!isActivePlatform(m.platform)) continue;
     platforms.add(m.platform);
     await syncDailyStats(userId, m.platform, m.syncedAt);
   }

@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 export const metadata: Metadata = {
   title: "ReSocial — Post Once, Reach Everywhere",
   description:
-    "The #1 automated content repurposing & distribution platform. Upload Once, distribute to TikTok, YouTube, Instagram, Facebook, LinkedIn, X, and more.",
+    "The #1 automated content repurposing & distribution platform. Upload Once, distribute to TikTok, YouTube, Instagram, Facebook, X, and more.",
   keywords: [
     "content repurposing",
     "social media distribution",

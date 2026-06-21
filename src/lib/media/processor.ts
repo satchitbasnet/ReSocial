@@ -31,7 +31,6 @@ const PLATFORM_DIMENSIONS: Record<PlatformId, { width: number; height: number }>
     instagram: { width: 1080, height: 1920 },
     youtube: { width: 1920, height: 1080 },
     facebook: { width: 1080, height: 1080 },
-    linkedin: { width: 1080, height: 1080 },
     twitter: { width: 1920, height: 1080 },
     pinterest: { width: 1080, height: 1920 },
     snapchat: { width: 1080, height: 1920 },

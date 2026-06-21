@@ -3,7 +3,6 @@ export const PLATFORMS = [
   { id: "youtube", name: "YouTube", color: "#FF0000" },
   { id: "instagram", name: "Instagram", color: "#E4405F" },
   { id: "facebook", name: "Facebook", color: "#1877F2" },
-  { id: "linkedin", name: "LinkedIn", color: "#0A66C2" },
   { id: "twitter", name: "X (Twitter)", color: "#000000" },
   { id: "pinterest", name: "Pinterest", color: "#BD081C" },
   { id: "snapchat", name: "Snapchat", color: "#FFFC00" },
@@ -16,7 +15,6 @@ export const PLATFORM_CAPTION_LIMITS: Record<PlatformId, number> = {
   youtube: 5000,
   instagram: 2200,
   facebook: 63206,
-  linkedin: 3000,
   twitter: 280,
   pinterest: 500,
   snapchat: 250,
@@ -69,7 +67,7 @@ export const FEATURES = [
   {
     title: "Post Once, Reach Everywhere",
     description:
-      "Upload content once and automatically distribute it to TikTok, YouTube, Instagram, Facebook, LinkedIn, X, and more.",
+      "Upload content once and automatically distribute it to TikTok, YouTube, Instagram, Facebook, X, and more.",
     icon: "broadcast",
   },
   {
@@ -135,7 +133,7 @@ export const FAQ = [
   },
   {
     q: "Which platforms do you support?",
-    a: "We support TikTok, YouTube, Instagram, Facebook, LinkedIn, X (Twitter), Pinterest, and Snapchat — with more platforms coming soon.",
+    a: "We support TikTok, YouTube, Instagram, Facebook, X (Twitter), Pinterest, and Snapchat — with more platforms coming soon.",
   },
   {
     q: "Can I connect multiple accounts per platform?",

@@ -7,7 +7,7 @@ import { competitorAccounts } from "@/lib/db/schema";
 import { planHasBenchmarking } from "@/lib/plans";
 
 const createSchema = z.object({
-  platform: z.enum(["tiktok", "youtube", "instagram", "facebook", "linkedin"]),
+  platform: z.enum(["tiktok", "youtube", "instagram", "facebook"]),
   handle: z.string().min(1).max(100),
 });
 

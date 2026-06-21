@@ -16,7 +16,7 @@ export default function HomePage() {
       <main>
         <Hero
           title="The #1 Automated Content Repurposing Platform"
-          subtitle="Connect with all major social media platforms. Upload once and automatically post videos, stories, and audio across TikTok, YouTube, Instagram, Facebook, LinkedIn, X, and more."
+          subtitle="Connect with all major social media platforms. Upload once and automatically post videos, stories, and audio across TikTok, YouTube, Instagram, Facebook, X, and more."
         />
 
         <section className="py-16 border-y glass-divider">

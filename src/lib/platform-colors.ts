@@ -28,12 +28,6 @@ export const PLATFORM_CALENDAR_COLORS: Record<
     text: "text-blue-700",
     dot: "bg-blue-600",
   },
-  linkedin: {
-    bg: "bg-sky-50",
-    border: "border-sky-600",
-    text: "text-sky-800",
-    dot: "bg-sky-600",
-  },
   twitter: {
     bg: "bg-gray-50",
     border: "border-gray-800",
