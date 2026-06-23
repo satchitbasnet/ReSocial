@@ -8,6 +8,7 @@ import { getDb } from "@/lib/db";
 import { driveConnections } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 import { Suspense } from "react";
+import { accountTypeLabel } from "@/lib/account-types";
 
 export default async function SettingsPage() {
   const session = await getSession();
@@ -44,10 +45,33 @@ export default async function SettingsPage() {
         <div className="glass-card p-6">
           <h2 className="font-semibold text-gray-900 mb-4">Account</h2>
           <dl className="space-y-3">
+            {stats.user?.accountType && (
+              <div className="flex justify-between">
+                <dt className="text-sm text-gray-500">Account Type</dt>
+                <dd className="text-sm font-medium text-gray-900">
+                  {accountTypeLabel(stats.user.accountType)}
+                </dd>
+              </div>
+            )}
             <div className="flex justify-between">
-              <dt className="text-sm text-gray-500">Name</dt>
-              <dd className="text-sm font-medium text-gray-900">{session.name}</dd>
+              <dt className="text-sm text-gray-500">
+                {stats.user?.organizationName ? "Organization" : "Name"}
+              </dt>
+              <dd className="text-sm font-medium text-gray-900 text-right">
+                {stats.user?.organizationName ?? session.name}
+              </dd>
             </div>
+            {stats.user?.organizationName &&
+              (stats.user.firstName || stats.user.lastName) && (
+                <div className="flex justify-between">
+                  <dt className="text-sm text-gray-500">Contact</dt>
+                  <dd className="text-sm font-medium text-gray-900">
+                    {[stats.user.firstName, stats.user.lastName]
+                      .filter(Boolean)
+                      .join(" ")}
+                  </dd>
+                </div>
+              )}
             <div className="flex justify-between">
               <dt className="text-sm text-gray-500">Email</dt>
               <dd className="text-sm font-medium text-gray-900">{session.email}</dd>

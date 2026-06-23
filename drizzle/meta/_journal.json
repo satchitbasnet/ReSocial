@@ -15,6 +15,13 @@
       "when": 1781940000000,
       "tag": "0001_usage_meters",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781941000000,
+      "tag": "0002_account_profile",
+      "breakpoints": true
     }
   ]
 }

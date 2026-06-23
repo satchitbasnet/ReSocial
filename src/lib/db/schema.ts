@@ -58,11 +58,20 @@ export const reportFrequencyEnum = pgEnum("report_frequency", [
   "weekly",
   "monthly",
 ]);
+export const accountTypeEnum = pgEnum("account_type", [
+  "creator",
+  "small_business",
+  "agency",
+]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
+  organizationName: text("organization_name"),
+  accountType: accountTypeEnum("account_type").default("creator").notNull(),
   passwordHash: text("password_hash").notNull(),
   plan: planEnum("plan").default("trial").notNull(),
   trialEndsAt: timestamp("trial_ends_at"),

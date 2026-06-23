@@ -6,22 +6,54 @@ import { users } from "@/lib/db/schema";
 import { createSession, hashPassword } from "@/lib/auth";
 import { recordReferralOnSignup } from "@/lib/affiliate";
 
-const signupSchema = z.object({
-  name: z.string().min(2),
+const sharedFields = {
   email: z.string().email(),
   password: z.string().min(8),
   referralCode: z.string().min(4).max(32).optional(),
-});
+};
+
+const signupSchema = z.discriminatedUnion("accountType", [
+  z.object({
+    accountType: z.literal("creator"),
+    firstName: z.string().trim().min(1, "First name is required"),
+    lastName: z.string().trim().min(1, "Last name is required"),
+    ...sharedFields,
+  }),
+  z.object({
+    accountType: z.literal("small_business"),
+    organizationName: z.string().trim().min(2, "Business name is required"),
+    firstName: z.string().trim().optional(),
+    lastName: z.string().trim().optional(),
+    ...sharedFields,
+  }),
+  z.object({
+    accountType: z.literal("agency"),
+    organizationName: z.string().trim().min(2, "Agency name is required"),
+    firstName: z.string().trim().optional(),
+    lastName: z.string().trim().optional(),
+    ...sharedFields,
+  }),
+]);
+
+function displayName(data: z.infer<typeof signupSchema>): string {
+  if (data.accountType === "creator") {
+    return `${data.firstName} ${data.lastName}`.trim();
+  }
+  return data.organizationName;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = signupSchema.safeParse(body);
     if (!parsed.success) {
-      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
+      const message =
+        parsed.error.issues[0]?.message ?? "Invalid input";
+      return NextResponse.json({ error: message }, { status: 400 });
     }
 
-    const { name, email, password, referralCode } = parsed.data;
+    const data = parsed.data;
+    const { email, password, referralCode } = data;
     const db = getDb();
 
     const existing = await db
@@ -41,10 +73,22 @@ export async function POST(request: NextRequest) {
     const trialEndsAt = new Date();
     trialEndsAt.setDate(trialEndsAt.getDate() + 14);
 
+    const name = displayName(data);
+    const firstName =
+      data.accountType === "creator" ? data.firstName : data.firstName?.trim() || null;
+    const lastName =
+      data.accountType === "creator" ? data.lastName : data.lastName?.trim() || null;
+    const organizationName =
+      data.accountType === "creator" ? null : data.organizationName;
+
     const [user] = await db
       .insert(users)
       .values({
         name,
+        firstName,
+        lastName,
+        organizationName,
+        accountType: data.accountType,
         email: email.toLowerCase(),
         passwordHash,
         plan: "trial",
