@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
-export function CTASection() {
+export function CTASection({ signupHref = "/signup" }: { signupHref?: string }) {
   return (
     <section className="py-24">
       <div className="mx-auto max-w-4xl px-6">
@@ -16,7 +16,7 @@ export function CTASection() {
               No Obligation. No Credit Card Required.
             </p>
             <Button
-              href="/signup"
+              href={signupHref}
               size="lg"
               className="bg-white text-brand-700 hover:bg-gray-100 shadow-xl"
             >

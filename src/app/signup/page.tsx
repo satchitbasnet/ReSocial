@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { Check, ArrowLeft, User, Building2, Users } from "lucide-react";
-import { ACCOUNT_TYPES, type AccountType, accountTypePricingHint } from "@/lib/account-types";
+import { ACCOUNT_TYPES, type AccountType, accountTypePricingHint, parseAccountTypeParam } from "@/lib/account-types";
 
 const REFERRAL_STORAGE_KEY = "resocial_referral_code";
 
@@ -45,17 +45,38 @@ function SignupForm() {
       const stored = sessionStorage.getItem(REFERRAL_STORAGE_KEY);
       if (stored) setReferralCode(stored);
     }
+
+    const typeFromUrl = parseAccountTypeParam(searchParams.get("type"));
+    if (typeFromUrl) {
+      setAccountType(typeFromUrl);
+      setStep(2);
+    }
   }, [searchParams]);
 
+  function resetProfileFields() {
+    setFirstName("");
+    setLastName("");
+    setOrganizationName("");
+  }
+
   function selectType(type: AccountType) {
+    resetProfileFields();
     setAccountType(type);
     setError("");
     setStep(2);
   }
 
   function goBack() {
+    resetProfileFields();
+    setAccountType(null);
     setStep(1);
     setError("");
+
+    const ref = searchParams.get("ref");
+    const nextUrl = ref
+      ? `/signup?ref=${encodeURIComponent(ref.trim().toUpperCase())}`
+      : "/signup";
+    router.replace(nextUrl, { scroll: false });
   }
 
   async function handleSubmit(e: React.FormEvent) {

@@ -42,14 +42,34 @@ function displayName(data: z.infer<typeof signupSchema>): string {
   return data.organizationName;
 }
 
+function signupErrorMessage(error: z.ZodError): string {
+  const issue = error.issues[0];
+  if (!issue) return "Invalid input";
+
+  const field = issue.path[issue.path.length - 1];
+  if (field === "accountType") {
+    return "Please select Content Creator, Small Business, or Agency.";
+  }
+  if (field === "firstName") return "First name is required";
+  if (field === "lastName") return "Last name is required";
+  if (field === "organizationName") {
+    return issue.message || "Organization name is required";
+  }
+  if (field === "email") return "Enter a valid email address";
+  if (field === "password") return "Password must be at least 8 characters";
+
+  return issue.message || "Invalid input";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const parsed = signupSchema.safeParse(body);
     if (!parsed.success) {
-      const message =
-        parsed.error.issues[0]?.message ?? "Invalid input";
-      return NextResponse.json({ error: message }, { status: 400 });
+      return NextResponse.json(
+        { error: signupErrorMessage(parsed.error) },
+        { status: 400 }
+      );
     }
 
     const data = parsed.data;

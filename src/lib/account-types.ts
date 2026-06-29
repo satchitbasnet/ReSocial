@@ -35,3 +35,23 @@ export function accountTypePricingHint(type: AccountType): string {
   const plan = PLANS[accountTypeRecommendedPlan(type)];
   return `${plan.name} from $${plan.price}/mo after your free trial.`;
 }
+
+/** Build signup URL with optional pre-selected account type (and referral). */
+export function signupHref(
+  type?: AccountType,
+  options?: { ref?: string }
+): string {
+  const params = new URLSearchParams();
+  if (type) params.set("type", type);
+  if (options?.ref) params.set("ref", options.ref);
+  const qs = params.toString();
+  return qs ? `/signup?${qs}` : "/signup";
+}
+
+/** Parse `?type=` from marketing links (`creator`, `small-business`, `agency`, etc.). */
+export function parseAccountTypeParam(value: string | null): AccountType | null {
+  if (!value) return null;
+  const normalized = value.trim().toLowerCase().replace(/-/g, "_");
+  if (normalized === "smallbusiness") return "small_business";
+  return ACCOUNT_TYPES.find((t) => t.id === normalized)?.id ?? null;
+}

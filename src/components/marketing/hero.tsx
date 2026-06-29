@@ -6,6 +6,7 @@ interface HeroProps {
   title: string;
   subtitle: string;
   cta?: string;
+  signupHref?: string;
 }
 
 export function Hero({
@@ -13,6 +14,7 @@ export function Hero({
   title,
   subtitle,
   cta = "Start Your 14-Day Free Trial",
+  signupHref = "/signup",
 }: HeroProps) {
   return (
     <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
@@ -36,7 +38,7 @@ export function Hero({
         </p>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button size="lg" href="/signup">
+          <Button size="lg" href={signupHref}>
             {cta}
             <ArrowRight size={18} className="ml-2" />
           </Button>

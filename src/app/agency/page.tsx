@@ -5,6 +5,7 @@ import { PlatformLogos } from "@/components/marketing/platform-logos";
 import { FeaturesGrid } from "@/components/marketing/features-grid";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { CTASection } from "@/components/marketing/cta-section";
+import { signupHref } from "@/lib/account-types";
 import { Users, Building2, Briefcase } from "lucide-react";
 
 const useCases = [
@@ -29,6 +30,7 @@ const useCases = [
 ];
 
 export default function AgencyPage() {
+  const signupUrl = signupHref("agency");
   return (
     <>
       <Navbar />
@@ -37,6 +39,7 @@ export default function AgencyPage() {
           badge="For Agencies"
           title="Automate Repurposing for Every Brand You Manage"
           subtitle="Post content on one platform and let ReSocial automatically tailor and distribute it across all social media channels."
+          signupHref={signupUrl}
         />
 
         <section className="py-20 bg-gray-50">
@@ -73,7 +76,7 @@ export default function AgencyPage() {
 
         <FeaturesGrid />
         <PricingSection />
-        <CTASection />
+        <CTASection signupHref={signupUrl} />
       </main>
       <Footer />
     </>
