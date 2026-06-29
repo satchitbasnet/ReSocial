@@ -139,9 +139,21 @@ function AccountsContent() {
       <h1 className="text-2xl font-bold text-gray-900 mb-2">
         Connected Accounts
       </h1>
-      <p className="text-gray-600 mb-8">
+      <p className="text-gray-600 mb-4">
         Connect your social media accounts to enable cross-platform distribution.
       </p>
+      <div className="mb-8 rounded-xl border border-gray-100 bg-gray-50/80 p-4 text-sm text-gray-600">
+        <p className="font-medium text-gray-900 mb-1">
+          We never ask for your social media passwords
+        </p>
+        <p>
+          TikTok, YouTube, Instagram, and Facebook use official OAuth APIs. When
+          you tap Connect, you are redirected to that platform&apos;s secure
+          login screen to click Allow. ReSocial receives a token to publish on
+          your behalf — not your password. You can revoke access anytime from
+          the platform&apos;s app settings.
+        </p>
+      </div>
 
       {banner && (
         <div
@@ -219,7 +231,7 @@ function AccountsContent() {
                       </p>
                     )}
                     {usesOAuth && !isConnected && (
-                      <p className="text-xs text-gray-400">OAuth</p>
+                      <p className="text-xs text-gray-400">Secure OAuth</p>
                     )}
                   </div>
                 </div>
