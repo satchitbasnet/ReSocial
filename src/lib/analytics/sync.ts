@@ -14,7 +14,11 @@ import {
   refreshYouTubeToken,
   fetchYouTubeChannelInfo,
 } from "@/lib/platforms/youtube";
-import { fetchInstagramMediaStats } from "@/lib/platforms/instagram";
+import {
+  fetchInstagramMediaStats,
+  getInstagramUserId,
+  isLegacyInstagramAccountId,
+} from "@/lib/platforms/instagram";
 import { fetchFacebookVideoStats, fetchFacebookPages } from "@/lib/platforms/facebook";
 import {
   simulatePlatformMetrics,
@@ -81,28 +85,37 @@ export async function syncPostMetrics(distributionId: string): Promise<void> {
       }
     } else if (row.platform === "instagram" && row.platformAccountId) {
       const userToken = row.accessToken;
-      const pageToken =
-        row.refreshToken ??
-        (userToken
-          ? await (async () => {
-              const [, pageId] = row.platformAccountId!.split(":");
-              const pages = await fetch(
-                `https://graph.facebook.com/v18.0/me/accounts?fields=id,access_token&access_token=${encodeURIComponent(userToken)}`
-              ).then((r) =>
-                r.json() as Promise<{
-                  data?: Array<{ id: string; access_token: string }>;
-                }>
-              );
-              return pages.data?.find((p) => p.id === pageId)?.access_token;
-            })()
-          : undefined);
+      if (userToken) {
 
-      if (pageToken && userToken) {
+      if (isLegacyInstagramAccountId(row.platformAccountId)) {
+        const [, pageId] = row.platformAccountId.split(":");
+        const pageToken =
+          row.refreshToken ??
+          (await (async () => {
+            const pages = await fetch(
+              `https://graph.facebook.com/v18.0/me/accounts?fields=id,access_token&access_token=${encodeURIComponent(userToken)}`
+            ).then((r) =>
+              r.json() as Promise<{
+                data?: Array<{ id: string; access_token: string }>;
+              }>
+            );
+            return pages.data?.find((p) => p.id === pageId)?.access_token;
+          })());
+
+        if (pageToken) {
+          metrics = await fetchInstagramMediaStats(
+            row.platformPostId,
+            pageToken,
+            false
+          );
+        }
+      } else {
         metrics = await fetchInstagramMediaStats(
-          userToken,
           row.platformPostId,
-          pageToken
+          userToken,
+          true
         );
+      }
       }
     } else if (row.platform === "facebook" && row.platformAccountId) {
       const pages = await fetchFacebookPages(row.accessToken);
@@ -158,9 +171,19 @@ export async function syncFollowerSnapshot(accountId: string): Promise<void> {
       const channel = await fetchYouTubeChannelInfo(account.accessToken);
       followerCount = channel.subscriberCount;
     } else if (account.platform === "instagram" && account.accountId) {
-      const [igUserId] = account.accountId.split(":");
+      const igUserId = getInstagramUserId(account.accountId);
+      if (!igUserId || !account.accessToken) return;
+
+      const graphHost = isLegacyInstagramAccountId(account.accountId)
+        ? "graph.facebook.com"
+        : "graph.instagram.com";
+      const token =
+        isLegacyInstagramAccountId(account.accountId) && account.refreshToken
+          ? account.refreshToken
+          : account.accessToken;
+
       const res = await fetch(
-        `https://graph.facebook.com/v18.0/${igUserId}?fields=followers_count&access_token=${encodeURIComponent(account.accessToken)}`
+        `https://${graphHost}/v21.0/${igUserId}?fields=followers_count&access_token=${encodeURIComponent(token)}`
       );
       const body = await res.json();
       followerCount = body.followers_count ?? 0;

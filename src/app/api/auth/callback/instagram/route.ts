@@ -43,8 +43,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const tokens = await exchangeInstagramCode(code);
-    const account = await fetchInstagramAccountInfo(tokens.accessToken);
-    const compositeId = `${account.igUserId}:${account.pageId}`;
+    const account = await fetchInstagramAccountInfo(
+      tokens.accessToken,
+      tokens.userId
+    );
     const db = getDb();
 
     const [existing] = await db
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
         and(
           eq(connectedAccounts.userId, session.userId),
           eq(connectedAccounts.platform, "instagram"),
-          eq(connectedAccounts.accountId, compositeId)
+          eq(connectedAccounts.accountId, account.igUserId)
         )
       )
       .limit(1);
@@ -67,7 +69,7 @@ export async function GET(request: NextRequest) {
         .set({
           accountName: account.displayName,
           accessToken: tokens.accessToken,
-          refreshToken: account.pageAccessToken,
+          refreshToken: null,
           isActive: true,
         })
         .where(eq(connectedAccounts.id, existing.id));
@@ -79,9 +81,9 @@ export async function GET(request: NextRequest) {
           userId: session.userId,
           platform: "instagram",
           accountName: account.displayName,
-          accountId: compositeId,
+          accountId: account.igUserId,
           accessToken: tokens.accessToken,
-          refreshToken: account.pageAccessToken,
+          refreshToken: null,
           isActive: true,
         })
         .returning({ id: connectedAccounts.id });
@@ -104,7 +106,10 @@ export async function GET(request: NextRequest) {
     const message =
       err instanceof Error ? err.message : "Instagram authorization failed.";
 
-    if (message.includes("No Instagram Business") || message.includes("No Facebook Pages")) {
+    if (
+      message.includes("not a Professional") ||
+      message.includes("Personal accounts")
+    ) {
       accountsUrl.searchParams.set("error", "instagram_no_business");
     } else {
       accountsUrl.searchParams.set("error", "instagram_oauth_failed");

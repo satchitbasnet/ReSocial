@@ -7,6 +7,11 @@ import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Button } from "@/components/ui/button";
 import { Plus, Trash2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  INSTAGRAM_CONNECT_NOTES,
+  INSTAGRAM_PERSONAL_ACCOUNT_NOTICE,
+  INSTAGRAM_SETUP_STEPS,
+} from "@/lib/platforms/instagram";
 
 interface ConnectedAccount {
   id: string;
@@ -78,8 +83,7 @@ function AccountsContent() {
         youtube_oauth_failed: "YouTube authorization failed. Please try again.",
         instagram_oauth_failed:
           errorDetail ?? "Instagram authorization failed. Please try again.",
-        instagram_no_business:
-          "No Instagram Business or Creator account is linked to your Facebook Page. Switch to a Professional account in Instagram, then connect it to your Page in Meta Business Suite.",
+        instagram_no_business: INSTAGRAM_PERSONAL_ACCOUNT_NOTICE,
         facebook_oauth_failed: "Facebook authorization failed. Please try again.",
         facebook_no_pages:
           "No Facebook Pages found. Create a Page and try again.",
@@ -149,6 +153,14 @@ function AccountsContent() {
           )}
         >
           {banner.message}
+          {banner.type === "error" &&
+            searchParams.get("error") === "instagram_no_business" && (
+              <ol className="mt-3 list-decimal list-inside space-y-1.5 text-red-900/90">
+                {INSTAGRAM_SETUP_STEPS.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            )}
         </div>
       )}
 
@@ -220,6 +232,24 @@ function AccountsContent() {
                   Connect
                 </Button>
               </div>
+
+              {platform.id === "instagram" && !isConnected && (
+                <div className="mt-3 rounded-lg bg-brand-50/80 border border-brand-100 p-3 text-xs text-gray-700 space-y-2">
+                  <p className="font-medium text-gray-900">
+                    Connect with Instagram Login (like Repurpose.io)
+                  </p>
+                  <p>{INSTAGRAM_PERSONAL_ACCOUNT_NOTICE}</p>
+                  <ul className="list-disc list-inside space-y-1 text-gray-600">
+                    <li>{INSTAGRAM_CONNECT_NOTES.reels}</li>
+                    <li>{INSTAGRAM_CONNECT_NOTES.stories}</li>
+                  </ul>
+                  <ol className="list-decimal list-inside space-y-1 text-gray-600">
+                    {INSTAGRAM_SETUP_STEPS.map((step) => (
+                      <li key={step}>{step}</li>
+                    ))}
+                  </ol>
+                </div>
+              )}
 
               {connected.map((account) => (
                 <div
