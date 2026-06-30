@@ -13,7 +13,9 @@ const TIKTOK_VIDEO_INIT_URL =
 const TIKTOK_PUBLISH_STATUS_URL =
   "https://open.tiktokapis.com/v2/post/publish/status/fetch/";
 
-const TIKTOK_SCOPES = ["user.info.basic", "video.publish"].join(",");
+const TIKTOK_VIDEO_LIST_URL =
+  "https://open.tiktokapis.com/v2/video/list/";
+const TIKTOK_SCOPES = ["user.info.basic", "video.publish", "video.list"].join(",");
 const CHUNK_SIZE = 10 * 1024 * 1024; // 10 MB
 
 export interface TikTokTokens {
@@ -390,4 +392,60 @@ export async function publishVideoToTikTok(
 
     return { platformPostId };
   });
+}
+
+export interface TikTokSourceVideo {
+  id: string;
+  title: string;
+  description: string;
+  shareUrl: string;
+  publishedAt: string;
+}
+
+/** List recent TikTok uploads for Repurpose source workflows (requires video.list scope). */
+export async function fetchTikTokRecentVideos(
+  accessToken: string,
+  maxCount = 10
+): Promise<TikTokSourceVideo[]> {
+  const fields = [
+    "id",
+    "title",
+    "video_description",
+    "create_time",
+    "share_url",
+  ].join(",");
+
+  const res = await tiktokFetch(
+    `${TIKTOK_VIDEO_LIST_URL}?fields=${encodeURIComponent(fields)}`,
+    accessToken,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ max_count: Math.min(maxCount, 20) }),
+    }
+  );
+
+  const body: TikTokApiResponse<{
+    videos?: Array<{
+      id?: string;
+      title?: string;
+      video_description?: string;
+      create_time?: number;
+      share_url?: string;
+    }>;
+  }> = await res.json();
+
+  await checkTikTokResponse(res, body);
+
+  return (body.data?.videos ?? [])
+    .filter((v) => v.id && v.share_url)
+    .map((v) => ({
+      id: v.id!,
+      title: v.title ?? v.video_description?.slice(0, 80) ?? "TikTok Video",
+      description: v.video_description ?? v.title ?? "",
+      shareUrl: v.share_url!,
+      publishedAt: v.create_time
+        ? new Date(v.create_time * 1000).toISOString()
+        : new Date().toISOString(),
+    }));
 }

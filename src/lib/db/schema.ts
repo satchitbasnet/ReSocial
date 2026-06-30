@@ -70,6 +70,15 @@ export const workflowTypeEnum = pgEnum("workflow_type", [
 ]);
 export const contentTypeEnum = pgEnum("content_type", ["video", "photos"]);
 
+/** Tracks per-workflow source polling state (platform cursors + backfill IDs). */
+export type WorkflowPollCursor = {
+  instagram?: string;
+  youtube?: string;
+  facebook?: string;
+  tiktok?: string;
+  processed?: string[];
+};
+
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
   email: text("email").notNull().unique(),
@@ -161,7 +170,7 @@ export const workflows = pgTable("workflows", {
   removeWatermark: boolean("remove_watermark").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   lastPolledAt: timestamp("last_polled_at"),
-  pollCursor: jsonb("poll_cursor").$type<Record<string, string>>(),
+  pollCursor: jsonb("poll_cursor").$type<WorkflowPollCursor>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -174,6 +183,7 @@ export const posts = pgTable("posts", {
   title: text("title").notNull(),
   caption: text("caption"),
   mediaUrl: text("media_url").notNull(),
+  mediaUrls: jsonb("media_urls").$type<string[]>(),
   mediaType: text("media_type").default("video").notNull(),
   status: postStatusEnum("status").default("draft").notNull(),
   scheduledAt: timestamp("scheduled_at"),
@@ -310,6 +320,7 @@ export const inboxMessages = pgTable("inbox_messages", {
     onDelete: "set null",
   }),
   platformPostId: text("platform_post_id"),
+  replyTargetId: text("reply_target_id"),
   isRead: boolean("is_read").default(false).notNull(),
   isReplied: boolean("is_replied").default(false).notNull(),
   repliedAt: timestamp("replied_at"),

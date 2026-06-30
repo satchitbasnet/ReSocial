@@ -140,8 +140,8 @@ export default function WorkflowsPage() {
             on the source (polled every 15 min)
           </li>
           <li>
-            <strong>Repurpose existing content</strong> — backfill from your
-            source library (coming soon)
+            <strong>Repurpose existing content</strong> — backfills up to 25
+            posts from your source (one per cron run)
           </li>
         </ol>
       </div>
@@ -184,6 +184,17 @@ export default function WorkflowsPage() {
                   </button>
                 ))}
               </div>
+              {workflowType === "existing_content" ? (
+                <p className="text-xs text-gray-500 mt-2">
+                  Backfills your last 25 posts from the source account (one per
+                  cron run). Already repurposed items are skipped.
+                </p>
+              ) : (
+                <p className="text-xs text-gray-500 mt-2">
+                  Watches for new uploads after you save this workflow. Sources:
+                  Instagram, YouTube, Facebook, and TikTok (video only).
+                </p>
+              )}
             </div>
 
             <div>
@@ -213,9 +224,9 @@ export default function WorkflowsPage() {
                 ))}
               </div>
               {contentType === "photos" && (
-                <p className="text-xs text-amber-700 mt-2">
-                  Photo and carousel publishing is rolling out — video workflows
-                  are fully supported today.
+                <p className="text-xs text-gray-500 mt-2">
+                  Photo and carousel workflows publish to Instagram and
+                  Facebook. Video-only platforms are skipped.
                 </p>
               )}
             </div>

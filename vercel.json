@@ -35,7 +35,7 @@
       "maxDuration": 60
     },
     "src/app/api/cron/repurpose-sources/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 300
     }
   }
 }

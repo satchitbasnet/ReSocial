@@ -8,14 +8,71 @@ import {
 } from "@/lib/db/schema";
 import type { PlatformId } from "@/lib/constants";
 import {
+  getInstagramUserId,
+  isLegacyInstagramAccountId,
+} from "@/lib/platforms/instagram";
+import {
   fetchInstagramComments,
   fetchFacebookComments,
   fetchYouTubeComments,
+  fetchInstagramTaggedMedia,
+  fetchInstagramTaggedMediaFb,
+  fetchInstagramDirectMessages,
+  fetchInstagramPageDirectMessages,
+  fetchFacebookPageDirectMessages,
+  fetchFacebookPageMentions,
   resolvePageAccessToken,
   withYouTubeToken,
+  type FetchedInboxMessage,
 } from "@/lib/inbox/platforms";
 
-export async function syncInboxForUser(userId: string): Promise<number> {
+async function insertInboxMessages(
+  userId: string,
+  accountId: string,
+  platform: PlatformId,
+  messages: FetchedInboxMessage[],
+  link?: { postId: string; distributionId: string }
+): Promise<number> {
+  const db = getDb();
+  let inserted = 0;
+
+  for (const msg of messages) {
+    const [existing] = await db
+      .select({ id: inboxMessages.id })
+      .from(inboxMessages)
+      .where(
+        and(
+          eq(inboxMessages.userId, userId),
+          eq(inboxMessages.platform, platform),
+          eq(inboxMessages.platformMessageId, msg.platformMessageId)
+        )
+      )
+      .limit(1);
+
+    if (existing) continue;
+
+    await db.insert(inboxMessages).values({
+      userId,
+      accountId,
+      platform,
+      platformMessageId: msg.platformMessageId,
+      type: msg.type,
+      authorName: msg.authorName,
+      authorAvatar: msg.authorAvatar ?? null,
+      content: msg.content,
+      postId: link?.postId ?? null,
+      distributionId: link?.distributionId ?? null,
+      platformPostId: msg.platformPostId,
+      replyTargetId: msg.replyTargetId ?? msg.platformMessageId,
+      receivedAt: msg.receivedAt,
+    });
+    inserted++;
+  }
+
+  return inserted;
+}
+
+async function syncCommentInboxForUser(userId: string): Promise<number> {
   const db = getDb();
   let inserted = 0;
 
@@ -43,7 +100,7 @@ export async function syncInboxForUser(userId: string): Promise<number> {
     const platform = row.platform as PlatformId;
     if (!["instagram", "facebook", "youtube"].includes(platform)) continue;
 
-    let messages: Awaited<ReturnType<typeof fetchInstagramComments>> = [];
+    let messages: FetchedInboxMessage[] = [];
 
     try {
       if (platform === "instagram") {
@@ -78,40 +135,112 @@ export async function syncInboxForUser(userId: string): Promise<number> {
         );
       }
     } catch (err) {
-      console.error(`[Inbox] Sync failed for ${platform}:`, err);
+      console.error(`[Inbox] Comment sync failed for ${platform}:`, err);
       continue;
     }
 
-    for (const msg of messages) {
-      const [existing] = await db
-        .select({ id: inboxMessages.id })
-        .from(inboxMessages)
-        .where(
-          and(
-            eq(inboxMessages.userId, userId),
-            eq(inboxMessages.platform, platform),
-            eq(inboxMessages.platformMessageId, msg.platformMessageId)
-          )
-        )
-        .limit(1);
+    inserted += await insertInboxMessages(userId, row.accountId, platform, messages, {
+      postId: row.postId,
+      distributionId: row.distributionId,
+    });
+  }
 
-      if (existing) continue;
+  return inserted;
+}
 
-      await db.insert(inboxMessages).values({
-        userId,
-        accountId: row.accountId,
+async function syncAccountDirectInbox(
+  userId: string,
+  account: {
+    id: string;
+    platform: string;
+    accessToken: string | null;
+    refreshToken: string | null;
+    accountId: string | null;
+  }
+): Promise<number> {
+  if (!account.accessToken) return 0;
+
+  const platform = account.platform as PlatformId;
+  let messages: FetchedInboxMessage[] = [];
+
+  try {
+    if (platform === "instagram") {
+      const igUserId = getInstagramUserId(account.accountId);
+      if (!igUserId) return 0;
+
+      if (isLegacyInstagramAccountId(account.accountId)) {
+        const [, pageId] = account.accountId!.split(":");
+        const pageToken = await resolvePageAccessToken(
+          platform,
+          account.accessToken,
+          account.accountId,
+          account.refreshToken
+        );
+        if (!pageToken || !pageId) return 0;
+
+        const [tags, dms] = await Promise.all([
+          fetchInstagramTaggedMediaFb(pageToken, igUserId).catch(() => []),
+          fetchInstagramPageDirectMessages(pageToken, pageId).catch(() => []),
+        ]);
+        messages = [...tags, ...dms];
+      } else {
+        const [tags, dms] = await Promise.all([
+          fetchInstagramTaggedMedia(account.accessToken, igUserId).catch(() => []),
+          fetchInstagramDirectMessages(account.accessToken, igUserId).catch(
+            () => []
+          ),
+        ]);
+        messages = [...tags, ...dms];
+      }
+    } else if (platform === "facebook" && account.accountId) {
+      const pageToken = await resolvePageAccessToken(
         platform,
-        platformMessageId: msg.platformMessageId,
-        type: msg.type,
-        authorName: msg.authorName,
-        authorAvatar: msg.authorAvatar ?? null,
-        content: msg.content,
-        postId: row.postId,
-        distributionId: row.distributionId,
-        platformPostId: msg.platformPostId,
-        receivedAt: msg.receivedAt,
-      });
-      inserted++;
+        account.accessToken,
+        account.accountId,
+        null
+      );
+      if (!pageToken) return 0;
+
+      const [dms, mentions] = await Promise.all([
+        fetchFacebookPageDirectMessages(pageToken, account.accountId).catch(
+          () => []
+        ),
+        fetchFacebookPageMentions(pageToken, account.accountId).catch(() => []),
+      ]);
+      messages = [...dms, ...mentions];
+    }
+  } catch (err) {
+    console.error(`[Inbox] Direct sync failed for ${platform}:`, err);
+    return 0;
+  }
+
+  return insertInboxMessages(userId, account.id, platform, messages);
+}
+
+export async function syncInboxForUser(userId: string): Promise<number> {
+  const db = getDb();
+
+  let inserted = await syncCommentInboxForUser(userId);
+
+  const accounts = await db
+    .select({
+      id: connectedAccounts.id,
+      platform: connectedAccounts.platform,
+      accessToken: connectedAccounts.accessToken,
+      refreshToken: connectedAccounts.refreshToken,
+      accountId: connectedAccounts.accountId,
+    })
+    .from(connectedAccounts)
+    .where(
+      and(
+        eq(connectedAccounts.userId, userId),
+        eq(connectedAccounts.isActive, true)
+      )
+    );
+
+  for (const account of accounts) {
+    if (account.platform === "instagram" || account.platform === "facebook") {
+      inserted += await syncAccountDirectInbox(userId, account);
     }
   }
 

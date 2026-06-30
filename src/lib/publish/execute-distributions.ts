@@ -193,7 +193,11 @@ export async function executePublishForPost(
             .set({ accessToken, refreshToken })
             .where(eq(connectedAccounts.id, account.id));
         },
-        post.title
+        post.title,
+        {
+          mediaType: post.mediaType,
+          mediaUrls: post.mediaUrls ?? undefined,
+        }
       );
 
       await db

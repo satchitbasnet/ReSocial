@@ -8,8 +8,23 @@ import {
   publishVideoToYouTube,
 } from "@/lib/platforms/youtube";
 import { youtubeScopesAllowUpload } from "@/lib/platforms/youtube-permissions";
-import { publishVideoToInstagram } from "@/lib/platforms/instagram";
-import { publishVideoToFacebook } from "@/lib/platforms/facebook";
+import { publishVideoToInstagram, publishPhotosToInstagram } from "@/lib/platforms/instagram";
+import { publishVideoToFacebook, publishPhotosToFacebook } from "@/lib/platforms/facebook";
+
+export interface PublishMediaOptions {
+  mediaType?: string;
+  mediaUrls?: string[];
+}
+
+function isPhotoPost(mediaType?: string): boolean {
+  return mediaType === "image" || mediaType === "carousel";
+}
+
+function resolvePhotoUrls(mediaUrl: string, options?: PublishMediaOptions): string[] {
+  if (options?.mediaUrls?.length) return options.mediaUrls;
+  if (isPhotoPost(options?.mediaType)) return [mediaUrl];
+  return [];
+}
 
 export interface PublishMetrics {
   views: number;
@@ -46,11 +61,34 @@ export async function publishToPlatform(
   mediaUrl: string,
   caption: string,
   onTokenRefresh?: TokenRefreshHandler,
-  title?: string
+  title?: string,
+  mediaOptions?: PublishMediaOptions
 ): Promise<PublishResult> {
   const platformConfig = PLATFORMS.find((p) => p.id === account.platform);
   if (!platformConfig) {
     return { success: false, error: "Unknown platform" };
+  }
+
+  const photoUrls = resolvePhotoUrls(mediaUrl, mediaOptions);
+  const publishingPhotos = isPhotoPost(mediaOptions?.mediaType);
+
+  if (publishingPhotos) {
+    if (account.platform === "tiktok" || account.platform === "youtube") {
+      return {
+        success: false,
+        error: `${platformConfig.name} only supports video posts.`,
+      };
+    }
+  } else if (
+    mediaOptions?.mediaType &&
+    mediaOptions.mediaType !== "video" &&
+    account.platform !== "instagram" &&
+    account.platform !== "facebook"
+  ) {
+    return {
+      success: false,
+      error: `${platformConfig.name} does not support this media type yet.`,
+    };
   }
 
   if (account.platform === "tiktok") {
@@ -132,6 +170,17 @@ export async function publishToPlatform(
       };
     }
     try {
+      if (publishingPhotos) {
+        const { platformPostId, stats } = await publishPhotosToInstagram(
+          account.accessToken,
+          account.accountId,
+          photoUrls,
+          caption,
+          account.refreshToken
+        );
+        return { success: true, platformPostId, metrics: stats };
+      }
+
       const { platformPostId, stats } = await publishVideoToInstagram(
         account.accessToken,
         account.accountId,
@@ -155,6 +204,16 @@ export async function publishToPlatform(
       };
     }
     try {
+      if (publishingPhotos) {
+        const { platformPostId } = await publishPhotosToFacebook(
+          account.accessToken,
+          account.accountId,
+          photoUrls,
+          caption
+        );
+        return { success: true, platformPostId };
+      }
+
       const { platformPostId, stats } = await publishVideoToFacebook(
         account.accessToken,
         account.accountId,

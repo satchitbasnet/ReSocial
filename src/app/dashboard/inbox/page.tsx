@@ -205,7 +205,7 @@ export default function InboxPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Unified Inbox</h1>
           <p className="text-gray-600 text-sm mt-1">
-            Comments and mentions from all connected platforms in one place.
+            Comments, DMs, and mentions from connected platforms in one place.
           </p>
         </div>
         <Button onClick={handleSync} disabled={syncing} size="sm" variant="outline">
@@ -326,7 +326,8 @@ export default function InboxPage() {
                   <MessageSquare size={32} className="mx-auto text-gray-300 mb-3" />
                   <p className="text-gray-500 text-sm">No Messages Yet.</p>
                   <p className="text-gray-400 text-xs mt-1">
-                    Publish content, then sync to pull comments from Instagram, Facebook, and YouTube.
+                    Publish content and sync to pull comments, DMs, and mentions
+                    from Instagram and Facebook.
                   </p>
                 </div>
               ) : (
@@ -355,6 +356,9 @@ export default function InboxPage() {
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-sm text-gray-900 truncate">
                             {msg.authorName}
+                          </span>
+                          <span className="text-[10px] uppercase tracking-wide text-gray-400 shrink-0">
+                            {msg.type}
                           </span>
                           <PlatformIcon platform={msg.platform} size={14} />
                           {msg.isReplied && (

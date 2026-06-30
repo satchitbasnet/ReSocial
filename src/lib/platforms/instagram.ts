@@ -13,6 +13,7 @@ const INSTAGRAM_SCOPES = [
   "instagram_business_basic",
   "instagram_business_content_publish",
   "instagram_business_manage_comments",
+  "instagram_business_manage_messages",
 ].join(",");
 
 export interface MetaTokens {
@@ -382,24 +383,12 @@ export async function fetchInstagramMediaStats(
   }
 }
 
-async function publishReel(
-  igUserId: string,
+async function waitForInstagramContainer(
+  creationId: string,
   accessToken: string,
-  mediaUrl: string,
-  caption: string,
   useInstagramGraph: boolean
-): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
-  const graphPost = useInstagramGraph ? igGraphPost : fbGraphPost;
+): Promise<void> {
   const graphGet = useInstagramGraph ? igGraphGet : fbGraphGet;
-
-  const container = await graphPost<{ id: string }>(`/${igUserId}/media`, accessToken, {
-    media_type: "REELS",
-    video_url: mediaUrl,
-    caption: caption.slice(0, 2200),
-    share_to_feed: true,
-  });
-
-  const creationId = container.id;
 
   for (let i = 0; i < 30; i++) {
     await new Promise((r) => setTimeout(r, 3000));
@@ -407,7 +396,7 @@ async function publishReel(
       `/${creationId}?fields=status_code`,
       accessToken
     );
-    if (status.status_code === "FINISHED") break;
+    if (status.status_code === "FINISHED") return;
     if (status.status_code === "ERROR") {
       throw new Error("Instagram media container processing failed");
     }
@@ -415,6 +404,17 @@ async function publishReel(
       throw new Error("Instagram media processing timed out");
     }
   }
+}
+
+async function publishInstagramContainer(
+  igUserId: string,
+  accessToken: string,
+  creationId: string,
+  useInstagramGraph: boolean
+): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
+  const graphPost = useInstagramGraph ? igGraphPost : fbGraphPost;
+
+  await waitForInstagramContainer(creationId, accessToken, useInstagramGraph);
 
   const publish = await graphPost<{ id: string }>(
     `/${igUserId}/media_publish`,
@@ -432,23 +432,15 @@ async function publishReel(
   return { platformPostId, stats };
 }
 
-export async function publishVideoToInstagram(
+async function resolveInstagramPublishContext(
   accessToken: string,
-  accountId: string | null,
-  mediaUrl: string,
-  caption: string,
+  accountId: string,
   storedPageAccessToken?: string | null
-): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
-  if (!accountId) {
-    throw new Error("Instagram account ID missing");
-  }
-
-  if (!mediaUrl.startsWith("https://")) {
-    throw new Error(
-      "Instagram requires a public HTTPS video URL. Upload media to R2 first."
-    );
-  }
-
+): Promise<{
+  igUserId: string;
+  token: string;
+  useInstagramGraph: boolean;
+}> {
   const igUserId = getInstagramUserId(accountId);
   if (!igUserId) {
     throw new Error("Invalid Instagram account ID format");
@@ -470,18 +462,157 @@ export async function publishVideoToInstagram(
       pageAccessToken = page.access_token;
     }
 
-    return publishReel(igUserId, pageAccessToken, mediaUrl, caption, false);
+    return { igUserId, token: pageAccessToken, useInstagramGraph: false };
   }
 
-  return publishReel(igUserId, accessToken, mediaUrl, caption, true);
+  return { igUserId, token: accessToken, useInstagramGraph: true };
+}
+
+async function publishReel(
+  igUserId: string,
+  accessToken: string,
+  mediaUrl: string,
+  caption: string,
+  useInstagramGraph: boolean
+): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
+  const graphPost = useInstagramGraph ? igGraphPost : fbGraphPost;
+
+  const container = await graphPost<{ id: string }>(`/${igUserId}/media`, accessToken, {
+    media_type: "REELS",
+    video_url: mediaUrl,
+    caption: caption.slice(0, 2200),
+    share_to_feed: true,
+  });
+
+  const creationId = container.id;
+  return publishInstagramContainer(
+    igUserId,
+    accessToken,
+    creationId,
+    useInstagramGraph
+  );
+}
+
+export async function publishPhotosToInstagram(
+  accessToken: string,
+  accountId: string | null,
+  imageUrls: string[],
+  caption: string,
+  storedPageAccessToken?: string | null
+): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
+  if (!accountId) {
+    throw new Error("Instagram account ID missing");
+  }
+
+  const urls = imageUrls.filter((u) => u.startsWith("https://"));
+  if (urls.length === 0) {
+    throw new Error(
+      "Instagram requires public HTTPS image URLs. Upload media to storage first."
+    );
+  }
+  if (urls.length > 10) {
+    throw new Error("Instagram carousels support up to 10 images.");
+  }
+
+  const { igUserId, token, useInstagramGraph } =
+    await resolveInstagramPublishContext(
+      accessToken,
+      accountId,
+      storedPageAccessToken
+    );
+  const graphPost = useInstagramGraph ? igGraphPost : fbGraphPost;
+
+  if (urls.length === 1) {
+    const container = await graphPost<{ id: string }>(
+      `/${igUserId}/media`,
+      token,
+      {
+        image_url: urls[0],
+        caption: caption.slice(0, 2200),
+      }
+    );
+    return publishInstagramContainer(
+      igUserId,
+      token,
+      container.id,
+      useInstagramGraph
+    );
+  }
+
+  const childIds: string[] = [];
+  for (const imageUrl of urls) {
+    const child = await graphPost<{ id: string }>(`/${igUserId}/media`, token, {
+      image_url: imageUrl,
+      is_carousel_item: true,
+    });
+    childIds.push(child.id);
+    await waitForInstagramContainer(child.id, token, useInstagramGraph);
+  }
+
+  const carousel = await graphPost<{ id: string }>(`/${igUserId}/media`, token, {
+    media_type: "CAROUSEL",
+    children: childIds.join(","),
+    caption: caption.slice(0, 2200),
+  });
+
+  return publishInstagramContainer(
+    igUserId,
+    token,
+    carousel.id,
+    useInstagramGraph
+  );
+}
+
+export async function publishVideoToInstagram(
+  accessToken: string,
+  accountId: string | null,
+  mediaUrl: string,
+  caption: string,
+  storedPageAccessToken?: string | null
+): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
+  if (!accountId) {
+    throw new Error("Instagram account ID missing");
+  }
+
+  if (!mediaUrl.startsWith("https://")) {
+    throw new Error(
+      "Instagram requires a public HTTPS video URL. Upload media to R2 first."
+    );
+  }
+
+  const { igUserId, token, useInstagramGraph } =
+    await resolveInstagramPublishContext(
+      accessToken,
+      accountId,
+      storedPageAccessToken
+    );
+
+  return publishReel(igUserId, token, mediaUrl, caption, useInstagramGraph);
 }
 
 export interface InstagramSourceMedia {
   id: string;
   caption: string;
   mediaUrl: string;
-  mediaType: "video" | "image";
+  mediaUrls?: string[];
+  mediaType: "video" | "image" | "carousel";
   timestamp: string;
+}
+
+async function fetchInstagramCarouselUrls(
+  mediaId: string,
+  accessToken: string
+): Promise<string[]> {
+  const res = await igGraphGet<{
+    children?: { data?: Array<{ media_url?: string; media_type?: string }> };
+  }>(
+    `/${mediaId}?fields=children{media_url,media_type}`,
+    accessToken
+  );
+
+  return (res.children?.data ?? [])
+    .filter((c) => c.media_url && c.media_type === "IMAGE")
+    .map((c) => c.media_url!);
 }
 
 /** Fetch recent IG media for Repurpose source polling (Instagram Login API). */
@@ -503,14 +634,38 @@ export async function fetchInstagramRecentMedia(
     accessToken
   );
 
-  return (res.data ?? [])
-    .filter((m) => m.media_url && ["VIDEO", "REELS", "IMAGE"].includes(m.media_type ?? ""))
-    .map((m) => ({
+  const items = (res.data ?? []).filter((m) =>
+    ["VIDEO", "REELS", "IMAGE", "CAROUSEL_ALBUM"].includes(m.media_type ?? "")
+  );
+
+  const mapped: InstagramSourceMedia[] = [];
+
+  for (const m of items) {
+    if (m.media_type === "CAROUSEL_ALBUM") {
+      const urls = await fetchInstagramCarouselUrls(m.id, accessToken);
+      if (urls.length === 0) continue;
+      mapped.push({
+        id: m.id,
+        caption: m.caption ?? "",
+        mediaUrl: urls[0],
+        mediaUrls: urls,
+        mediaType: "carousel",
+        timestamp: m.timestamp ?? new Date().toISOString(),
+      });
+      continue;
+    }
+
+    if (!m.media_url) continue;
+
+    mapped.push({
       id: m.id,
       caption: m.caption ?? "",
-      mediaUrl: m.media_url!,
+      mediaUrl: m.media_url,
       mediaType:
         m.media_type === "IMAGE" ? ("image" as const) : ("video" as const),
       timestamp: m.timestamp ?? new Date().toISOString(),
-    }));
+    });
+  }
+
+  return mapped;
 }

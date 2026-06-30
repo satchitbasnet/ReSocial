@@ -24,8 +24,9 @@ export default function UploadPage() {
   const [caption, setCaption] = useState("");
   const [sameCaption, setSameCaption] = useState(true);
   const [platformCaptions, setPlatformCaptions] = useState<Record<string, string>>({});
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [preview, setPreview] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState("");
@@ -37,7 +38,6 @@ export default function UploadPage() {
     open: boolean;
     limit: "videos" | "platforms";
   }>({ open: false, limit: "videos" });
-  const [generatingCaption, setGeneratingCaption] = useState(false);
   const [pendingApproval, setPendingApproval] = useState(false);
 
   useEffect(() => {
@@ -65,15 +65,93 @@ export default function UploadPage() {
     }
   }, []);
 
-  const handleFile = useCallback((f: File) => {
-    setFile(f);
+  const handleFiles = useCallback((incoming: FileList | File[]) => {
+    const list = Array.from(incoming);
+    if (list.length === 0) return;
+
+    const hasVideo = list.some((f) => f.type.startsWith("video/"));
+    const hasImage = list.some((f) => f.type.startsWith("image/"));
+
+    if (hasVideo && hasImage) {
+      setError("Upload either a video or images, not both.");
+      return;
+    }
+    if (hasVideo && list.length > 1) {
+      setError("Only one video can be uploaded at a time.");
+      return;
+    }
+    if (hasImage && list.length > 10) {
+      setError("Instagram carousels support up to 10 images.");
+      return;
+    }
+
     setError("");
-    if (f.type.startsWith("video/")) {
-      setPreview(URL.createObjectURL(f));
+    setFiles(list);
+
+    if (hasVideo) {
+      setPreview(URL.createObjectURL(list[0]));
+      setImagePreviews([]);
     } else {
-      setPreview(URL.createObjectURL(f));
+      setPreview(null);
+      setImagePreviews(list.map((f) => URL.createObjectURL(f)));
     }
   }, []);
+
+  async function uploadOneFile(
+    file: File,
+    storage: { provider: string; configured: boolean }
+  ): Promise<{ mediaUrl: string; mediaType: string }> {
+    const maxSize = 500 * 1024 * 1024;
+    if (file.size > maxSize) {
+      throw new Error("File too large. Maximum size is 500MB.");
+    }
+
+    if (storage.provider === "vercel-blob") {
+      const { upload } = await import("@vercel/blob/client");
+      const pathname = `${Date.now()}-${file.name}`;
+      const blob = await upload(pathname, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+      });
+      return {
+        mediaUrl: blob.url,
+        mediaType: file.type.startsWith("video/") ? "video" : "image",
+      };
+    }
+
+    const uploadRes = await fetch("/api/upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: file.type,
+        contentLength: file.size,
+      }),
+    });
+    const uploadData = await uploadRes.json();
+
+    if (!uploadRes.ok) {
+      if (uploadData.upgradeRequired) {
+        setUpgradeModal({ open: true, limit: uploadData.limit ?? "videos" });
+      }
+      throw new Error(uploadData.error || "Upload failed");
+    }
+
+    const putRes = await fetch(uploadData.uploadUrl, {
+      method: "PUT",
+      headers: { "Content-Type": uploadData.contentType },
+      body: file,
+    });
+
+    if (!putRes.ok) {
+      throw new Error("Failed to upload file to storage. Please try again.");
+    }
+
+    return {
+      mediaUrl: uploadData.mediaUrl,
+      mediaType: uploadData.mediaType,
+    };
+  }
 
   function handleCaptionChange(value: string) {
     setCaption(value);
@@ -88,44 +166,6 @@ export default function UploadPage() {
 
   function handlePlatformCaptionChange(platformId: string, value: string) {
     setPlatformCaptions((prev) => ({ ...prev, [platformId]: value }));
-  }
-
-  async function generateAiCaption() {
-    if (!title.trim()) {
-      setError("Enter a title first so AI can write captions.");
-      return;
-    }
-    if (selectedPlatforms.length === 0) {
-      setError("Select at least one platform.");
-      return;
-    }
-    setGeneratingCaption(true);
-    setError("");
-    try {
-      const res = await fetch("/api/ai/caption", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          platforms: selectedPlatforms,
-          tone: "casual",
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Caption generation failed");
-        return;
-      }
-      handleCaptionChange(data.caption);
-      if (data.platformCaptions) {
-        setSameCaption(false);
-        setPlatformCaptions(data.platformCaptions);
-      }
-    } catch {
-      setError("Caption generation failed");
-    } finally {
-      setGeneratingCaption(false);
-    }
   }
 
   function togglePlatform(platformId: string) {
@@ -153,7 +193,7 @@ export default function UploadPage() {
   }
 
   async function handlePublish() {
-    if (!file || !title || selectedPlatforms.length === 0) {
+    if (files.length === 0 || !title || selectedPlatforms.length === 0) {
       setError("Please add a file, title, and select at least one platform.");
       return;
     }
@@ -162,12 +202,6 @@ export default function UploadPage() {
     setUploading(true);
 
     try {
-      const maxSize = 500 * 1024 * 1024;
-      if (file.size > maxSize) {
-        setError("File too large. Maximum size is 500MB.");
-        return;
-      }
-
       const storageRes = await fetch("/api/upload");
       const storage = await storageRes.json();
       if (!storageRes.ok || !storage.configured) {
@@ -178,52 +212,18 @@ export default function UploadPage() {
         return;
       }
 
-      let mediaUrl: string;
-      let mediaType: string;
+      const uploaded = await Promise.all(
+        files.map((f) => uploadOneFile(f, storage))
+      );
 
-      if (storage.provider === "vercel-blob") {
-        const { upload } = await import("@vercel/blob/client");
-        const pathname = `${Date.now()}-${file.name}`;
-        const blob = await upload(pathname, file, {
-          access: "public",
-          handleUploadUrl: "/api/upload",
-        });
-        mediaUrl = blob.url;
-        mediaType = file.type.startsWith("video/") ? "video" : "image";
-      } else {
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: file.name,
-            contentType: file.type,
-            contentLength: file.size,
-          }),
-        });
-        const uploadData = await uploadRes.json();
-
-        if (!uploadRes.ok) {
-          if (uploadData.upgradeRequired) {
-            setUpgradeModal({ open: true, limit: uploadData.limit ?? "videos" });
-          }
-          setError(uploadData.error || "Upload failed");
-          return;
-        }
-
-        const putRes = await fetch(uploadData.uploadUrl, {
-          method: "PUT",
-          headers: { "Content-Type": uploadData.contentType },
-          body: file,
-        });
-
-        if (!putRes.ok) {
-          setError("Failed to upload file to storage. Please try again.");
-          return;
-        }
-
-        mediaUrl = uploadData.mediaUrl;
-        mediaType = uploadData.mediaType;
-      }
+      const mediaUrls = uploaded.map((u) => u.mediaUrl);
+      const mediaUrl = mediaUrls[0];
+      const mediaType =
+        uploaded.length > 1
+          ? "carousel"
+          : uploaded[0].mediaType === "image"
+            ? "image"
+            : "video";
 
       setUploading(false);
       setPublishing(true);
@@ -240,8 +240,9 @@ export default function UploadPage() {
               (sameCaption ? caption : platformCaptions[p]) || caption,
             ])
           ),
-          mediaUrl: mediaUrl,
-          mediaType: mediaType,
+          mediaUrl,
+          mediaUrls: mediaUrls.length > 1 ? mediaUrls : undefined,
+          mediaType,
           platformIds: selectedPlatforms,
           scheduledAt: !publishNow && scheduleDate ? scheduleDate : undefined,
         }),
@@ -269,8 +270,10 @@ export default function UploadPage() {
           ),
         2000
       );
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Something went wrong. Please try again."
+      );
     } finally {
       setUploading(false);
       setPublishing(false);
@@ -323,7 +326,7 @@ export default function UploadPage() {
         className={cn(
           "border-2 border-dashed rounded-2xl p-12 text-center transition-colors mb-6",
           dragOver ? "border-brand-500 bg-brand-50" : "border-gray-200",
-          file && "border-green-300 bg-green-50/50"
+          files.length > 0 && "border-green-300 bg-green-50/50"
         )}
         onDragOver={(e) => {
           e.preventDefault();
@@ -333,43 +336,63 @@ export default function UploadPage() {
         onDrop={(e) => {
           e.preventDefault();
           setDragOver(false);
-          const f = e.dataTransfer.files[0];
-          if (f) handleFile(f);
+          if (e.dataTransfer.files.length > 0) {
+            handleFiles(e.dataTransfer.files);
+          }
         }}
       >
-        {preview ? (
+        {files.length > 0 ? (
           <div className="space-y-4">
-            {file?.type.startsWith("video/") ? (
+            {files[0].type.startsWith("video/") ? (
               <video
-                src={preview}
+                src={preview ?? undefined}
                 controls
                 className="max-h-64 mx-auto rounded-xl"
               />
+            ) : imagePreviews.length > 1 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-w-lg mx-auto">
+                {imagePreviews.map((src, i) => (
+                  <img
+                    key={src}
+                    src={src}
+                    alt={`Slide ${i + 1}`}
+                    className="h-28 w-full object-cover rounded-xl"
+                  />
+                ))}
+              </div>
             ) : (
               <img
-                src={preview}
+                src={imagePreviews[0] ?? preview ?? undefined}
                 alt="Preview"
                 className="max-h-64 mx-auto rounded-xl"
               />
             )}
-            <p className="text-sm text-gray-600">{file?.name}</p>
+            <p className="text-sm text-gray-600">
+              {files.length === 1
+                ? files[0].name
+                : `${files.length} images (carousel)`}
+            </p>
             <button
               onClick={() => {
-                setFile(null);
+                setFiles([]);
                 setPreview(null);
+                setImagePreviews([]);
               }}
               className="text-sm text-red-600 hover:underline"
             >
-              Remove file
+              Remove {files.length > 1 ? "files" : "file"}
             </button>
           </div>
         ) : (
           <>
             <Upload size={40} className="mx-auto text-gray-400 mb-4" />
             <p className="text-gray-700 font-medium mb-1">
-              Drag & drop your video or image
+              Drag & drop your video or images
             </p>
-            <p className="text-sm text-gray-500 mb-4">MP4, MOV, WebM, JPEG, PNG, GIF — up to 500MB</p>
+            <p className="text-sm text-gray-500 mb-4">
+              MP4, MOV, WebM, JPEG, PNG, GIF — up to 500MB. Select multiple
+              images for an Instagram/Facebook carousel (max 10).
+            </p>
             <label className="cursor-pointer">
               <span className="text-brand-600 font-medium hover:underline">
                 Browse files
@@ -377,10 +400,10 @@ export default function UploadPage() {
               <input
                 type="file"
                 className="hidden"
+                multiple
                 accept="video/mp4,video/quicktime,video/webm,image/jpeg,image/png,image/gif"
                 onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFile(f);
+                  if (e.target.files?.length) handleFiles(e.target.files);
                 }}
               />
             </label>
@@ -402,23 +425,9 @@ export default function UploadPage() {
           />
         </div>
         <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-medium text-gray-700">
-              Caption / Description
-            </label>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={generatingCaption}
-              onClick={generateAiCaption}
-            >
-              {generatingCaption ? (
-                <Loader2 size={14} className="animate-spin mr-1" />
-              ) : null}
-              AI captions
-            </Button>
-          </div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            Caption / Description
+          </label>
           <textarea
             value={caption}
             onChange={(e) => handleCaptionChange(e.target.value)}
@@ -571,7 +580,7 @@ export default function UploadPage() {
 
       <Button
         onClick={handlePublish}
-        disabled={uploading || publishing || !file || !title}
+        disabled={uploading || publishing || files.length === 0 || !title}
         className="w-full md:w-auto"
         size="lg"
       >

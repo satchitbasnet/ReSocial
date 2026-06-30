@@ -20,6 +20,7 @@ const createPostSchema = z.object({
   caption: z.string().optional(),
   captions: z.record(z.string(), z.string()).optional(),
   mediaUrl: z.string().min(1),
+  mediaUrls: z.array(z.string().url()).optional(),
   mediaType: z.string().default("video"),
   platformIds: z.array(z.string()).min(1),
   workflowId: z.string().uuid().optional(),
@@ -83,8 +84,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
-    const { title, caption, captions, mediaUrl, mediaType, platformIds, workflowId, scheduledAt } =
-      parsed.data;
+    const {
+      title,
+      caption,
+      captions,
+      mediaUrl,
+      mediaUrls,
+      mediaType,
+      platformIds,
+      workflowId,
+      scheduledAt,
+    } = parsed.data;
+
+    const resolvedMediaUrls =
+      mediaUrls && mediaUrls.length > 0 ? mediaUrls : undefined;
+    const resolvedMediaType =
+      resolvedMediaUrls && resolvedMediaUrls.length > 1
+        ? "carousel"
+        : resolvedMediaUrls?.length === 1 && mediaType !== "video"
+          ? "image"
+          : mediaType;
 
     const db = getDb();
     const publishCtx = await resolvePublishContext(session.userId, session.email);
@@ -155,8 +174,9 @@ export async function POST(request: NextRequest) {
         workflowId: workflow?.id ?? workflowId ?? null,
         title,
         caption: caption || "",
-        mediaUrl,
-        mediaType,
+        mediaUrl: resolvedMediaUrls?.[0] ?? mediaUrl,
+        mediaUrls: resolvedMediaUrls,
+        mediaType: resolvedMediaType,
         status: postStatus,
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
       })
