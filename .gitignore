@@ -43,3 +43,11 @@ next-env.d.ts
 # uploads (local dev only)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
