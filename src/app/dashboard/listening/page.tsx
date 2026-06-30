@@ -21,8 +21,18 @@ interface HashtagRow {
   } | null;
 }
 
+interface KeywordRow {
+  id: string;
+  keyword: string;
+  platform: string | null;
+  sentiment: string | null;
+  mentionCount: number;
+}
+
 export default function ListeningPage() {
   const [hashtags, setHashtags] = useState<HashtagRow[]>([]);
+  const [keywords, setKeywords] = useState<KeywordRow[]>([]);
+  const [newKeyword, setNewKeyword] = useState("");
   const [limit, setLimit] = useState(10);
   const [plan, setPlan] = useState("trial");
   const [loading, setLoading] = useState(true);
@@ -34,11 +44,16 @@ export default function ListeningPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/listening/hashtags");
-    const data = await res.json();
+    const [tagRes, kwRes] = await Promise.all([
+      fetch("/api/listening/hashtags"),
+      fetch("/api/listening/keywords"),
+    ]);
+    const data = await tagRes.json();
+    const kwData = await kwRes.json();
     if (data.hashtags) setHashtags(data.hashtags);
     if (data.limit) setLimit(data.limit);
     if (data.plan) setPlan(data.plan);
+    if (kwData.keywords) setKeywords(kwData.keywords);
     setLoading(false);
   }, []);
 
@@ -76,13 +91,29 @@ export default function ListeningPage() {
     setSyncing(false);
   }
 
+  async function addKeyword() {
+    if (!newKeyword.trim()) return;
+    await fetch("/api/listening/keywords", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keyword: newKeyword }),
+    });
+    setNewKeyword("");
+    load();
+  }
+
+  async function removeKeyword(id: string) {
+    await fetch(`/api/listening/keywords?id=${id}`, { method: "DELETE" });
+    load();
+  }
+
   return (
     <div className="max-w-4xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Hashtag Tracking</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Monitor hashtags on Instagram and TikTok. {hashtags.length}/{limit} tracked.
+      <h1 className="text-2xl font-bold text-gray-900 mb-2">Social Listening</h1>
+      <p className="text-gray-600 text-sm mt-1">
+            Track hashtags and brand keywords across platforms.
           </p>
         </div>
         <Button size="sm" variant="outline" onClick={sync} disabled={syncing}>
@@ -188,6 +219,47 @@ export default function ListeningPage() {
           })}
         </div>
       )}
+
+      <div className="glass-card p-5 mt-8">
+        <p className="text-sm font-medium text-gray-700 mb-3">Brand keywords</p>
+        <div className="flex gap-3 mb-4">
+          <input
+            value={newKeyword}
+            onChange={(e) => setNewKeyword(e.target.value)}
+            placeholder="your brand name"
+            className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-sm"
+            onKeyDown={(e) => e.key === "Enter" && addKeyword()}
+          />
+          <Button onClick={addKeyword}>
+            <Plus size={16} className="mr-1" /> Track keyword
+          </Button>
+        </div>
+        {keywords.length === 0 ? (
+          <p className="text-sm text-gray-500">No keywords tracked yet.</p>
+        ) : (
+          <div className="space-y-2">
+            {keywords.map((kw) => (
+              <div
+                key={kw.id}
+                className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
+              >
+                <span className="text-sm font-medium text-gray-900">{kw.keyword}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 capitalize">
+                    {kw.sentiment ?? "neutral"}
+                  </span>
+                  <button
+                    onClick={() => removeKeyword(kw.id)}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <UpgradeModal open={upgradeOpen} onClose={() => setUpgradeOpen(false)} limit="platforms" currentPlan={plan} />
     </div>

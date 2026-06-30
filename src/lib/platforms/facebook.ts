@@ -160,29 +160,47 @@ export async function publishVideoToFacebook(
     throw new Error("Facebook page ID missing");
   }
 
-  const pages = await fetchFacebookPages(accessToken);
-  const page = pages.find((p) => p.pageId === accountId);
-  if (!page) {
-    throw new Error("Facebook Page access lost. Reconnect Facebook.");
-  }
+  let pageAccessToken = accessToken;
 
-  const res = await fetch(`${GRAPH_BASE}/${page.pageId}/videos`, {
+  const res = await fetch(`${GRAPH_BASE}/${accountId}/videos`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       file_url: mediaUrl,
       description: caption.slice(0, 5000),
-      access_token: page.pageAccessToken,
+      access_token: pageAccessToken,
     }),
   });
 
-  const body = await res.json();
-  if (!res.ok || body.error) {
+  let body = await res.json();
+
+  if ((!res.ok || body.error) && body.error?.code !== undefined) {
+    const pages = await fetchFacebookPages(accessToken);
+    const page = pages.find((p) => p.pageId === accountId);
+    if (!page) {
+      throw new Error("Facebook Page access lost. Reconnect Facebook.");
+    }
+    pageAccessToken = page.pageAccessToken;
+
+    const retry = await fetch(`${GRAPH_BASE}/${accountId}/videos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file_url: mediaUrl,
+        description: caption.slice(0, 5000),
+        access_token: pageAccessToken,
+      }),
+    });
+    body = await retry.json();
+    if (!retry.ok || body.error) {
+      throw new Error(body.error?.message || "Facebook video publish failed");
+    }
+  } else if (!res.ok || body.error) {
     throw new Error(body.error?.message || "Facebook video publish failed");
   }
 
   const platformPostId = body.id as string;
-  const stats = await fetchFacebookVideoStats(page.pageAccessToken, platformPostId);
+  const stats = await fetchFacebookVideoStats(pageAccessToken, platformPostId);
 
   return { platformPostId, stats };
 }

@@ -37,6 +37,8 @@ export default function UploadPage() {
     open: boolean;
     limit: "videos" | "platforms";
   }>({ open: false, limit: "videos" });
+  const [generatingCaption, setGeneratingCaption] = useState(false);
+  const [pendingApproval, setPendingApproval] = useState(false);
 
   useEffect(() => {
     fetch("/api/accounts")
@@ -86,6 +88,44 @@ export default function UploadPage() {
 
   function handlePlatformCaptionChange(platformId: string, value: string) {
     setPlatformCaptions((prev) => ({ ...prev, [platformId]: value }));
+  }
+
+  async function generateAiCaption() {
+    if (!title.trim()) {
+      setError("Enter a title first so AI can write captions.");
+      return;
+    }
+    if (selectedPlatforms.length === 0) {
+      setError("Select at least one platform.");
+      return;
+    }
+    setGeneratingCaption(true);
+    setError("");
+    try {
+      const res = await fetch("/api/ai/caption", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          platforms: selectedPlatforms,
+          tone: "casual",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Caption generation failed");
+        return;
+      }
+      handleCaptionChange(data.caption);
+      if (data.platformCaptions) {
+        setSameCaption(false);
+        setPlatformCaptions(data.platformCaptions);
+      }
+    } catch {
+      setError("Caption generation failed");
+    } finally {
+      setGeneratingCaption(false);
+    }
   }
 
   function togglePlatform(platformId: string) {
@@ -217,10 +257,15 @@ export default function UploadPage() {
       }
 
       setSuccess(true);
+      setPendingApproval(Boolean(postData.pendingApproval));
       setTimeout(
         () =>
           router.push(
-            !publishNow && scheduleDate ? "/dashboard/calendar" : "/dashboard/history"
+            postData.pendingApproval
+              ? "/dashboard/approvals"
+              : !publishNow && scheduleDate
+                ? "/dashboard/calendar"
+                : "/dashboard/history"
           ),
         2000
       );
@@ -238,10 +283,13 @@ export default function UploadPage() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600 mx-auto mb-4">
           <Check size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">Published!</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          {pendingApproval ? "Submitted for approval" : "Published!"}
+        </h2>
         <p className="text-gray-600">
-          Your content is being distributed to {selectedPlatforms.length}{" "}
-          platform{selectedPlatforms.length > 1 ? "s" : ""}.
+          {pendingApproval
+            ? "An admin will review your post before it goes live."
+            : `Your content is being distributed to ${selectedPlatforms.length} platform${selectedPlatforms.length > 1 ? "s" : ""}.`}
         </p>
       </div>
     );
@@ -354,9 +402,23 @@ export default function UploadPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Caption / Description
-          </label>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-sm font-medium text-gray-700">
+              Caption / Description
+            </label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={generatingCaption}
+              onClick={generateAiCaption}
+            >
+              {generatingCaption ? (
+                <Loader2 size={14} className="animate-spin mr-1" />
+              ) : null}
+              AI captions
+            </Button>
+          </div>
           <textarea
             value={caption}
             onChange={(e) => handleCaptionChange(e.target.value)}

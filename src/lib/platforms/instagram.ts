@@ -475,3 +475,42 @@ export async function publishVideoToInstagram(
 
   return publishReel(igUserId, accessToken, mediaUrl, caption, true);
 }
+
+export interface InstagramSourceMedia {
+  id: string;
+  caption: string;
+  mediaUrl: string;
+  mediaType: "video" | "image";
+  timestamp: string;
+}
+
+/** Fetch recent IG media for Repurpose source polling (Instagram Login API). */
+export async function fetchInstagramRecentMedia(
+  accessToken: string,
+  igUserId: string,
+  limit = 10
+): Promise<InstagramSourceMedia[]> {
+  const res = await igGraphGet<{
+    data: Array<{
+      id: string;
+      caption?: string;
+      media_type?: string;
+      media_url?: string;
+      timestamp?: string;
+    }>;
+  }>(
+    `/${igUserId}/media?fields=id,caption,media_type,media_url,timestamp&limit=${limit}`,
+    accessToken
+  );
+
+  return (res.data ?? [])
+    .filter((m) => m.media_url && ["VIDEO", "REELS", "IMAGE"].includes(m.media_type ?? ""))
+    .map((m) => ({
+      id: m.id,
+      caption: m.caption ?? "",
+      mediaUrl: m.media_url!,
+      mediaType:
+        m.media_type === "IMAGE" ? ("image" as const) : ("video" as const),
+      timestamp: m.timestamp ?? new Date().toISOString(),
+    }));
+}

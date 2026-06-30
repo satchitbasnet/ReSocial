@@ -7,6 +7,7 @@ import {
 import {
   publishVideoToYouTube,
 } from "@/lib/platforms/youtube";
+import { youtubeScopesAllowUpload } from "@/lib/platforms/youtube-permissions";
 import { publishVideoToInstagram } from "@/lib/platforms/instagram";
 import { publishVideoToFacebook } from "@/lib/platforms/facebook";
 
@@ -33,6 +34,7 @@ export interface PublishAccount {
   accessToken: string | null;
   refreshToken: string | null;
   accountId: string | null;
+  oauthScopes: string | null;
 }
 
 /**
@@ -85,6 +87,14 @@ export async function publishToPlatform(
       return {
         success: false,
         error: "YouTube account not connected via OAuth. Reconnect at Accounts.",
+      };
+    }
+
+    if (!youtubeScopesAllowUpload(account.oauthScopes)) {
+      return {
+        success: false,
+        error:
+          "This YouTube connection is read-only. Reconnect with Basic or Full permissions to upload.",
       };
     }
 

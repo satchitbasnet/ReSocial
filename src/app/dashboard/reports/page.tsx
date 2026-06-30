@@ -133,6 +133,11 @@ export default function ReportsPage() {
             {sending ? <Loader2 size={16} className="mr-1.5 animate-spin" /> : <Send size={16} className="mr-1.5" />}
             Send test now
           </Button>
+          <a href="/api/reports/export" download>
+            <Button type="button" variant="outline">
+              Export client report
+            </Button>
+          </a>
         </div>
       </div>
 

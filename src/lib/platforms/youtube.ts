@@ -1,5 +1,9 @@
 import { getAppUrl } from "@/lib/config";
 import { fetchMediaBuffer } from "@/lib/r2";
+import {
+  getYouTubeScopesForTier,
+  type YouTubePermissionTier,
+} from "@/lib/platforms/youtube-permissions";
 
 const GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
@@ -9,11 +13,23 @@ const YOUTUBE_UPLOAD_URL =
   "https://www.googleapis.com/upload/youtube/v3/videos";
 const YOUTUBE_VIDEOS_URL = "https://www.googleapis.com/youtube/v3/videos";
 
-const YOUTUBE_SCOPES = [
-  "https://www.googleapis.com/auth/youtube.upload",
-  "https://www.googleapis.com/auth/youtube.readonly",
-  "https://www.googleapis.com/auth/youtube.force-ssl",
-].join(" ");
+export function buildYouTubeAuthUrl(
+  state: string,
+  permission: YouTubePermissionTier = "basic"
+): string {
+  const { clientId } = getYouTubeCredentials();
+  const scope = getYouTubeScopesForTier(permission).join(" ");
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: getYouTubeRedirectUri(),
+    response_type: "code",
+    scope,
+    state,
+    access_type: "offline",
+    prompt: "consent",
+  });
+  return `${GOOGLE_AUTH_URL}?${params.toString()}`;
+}
 
 export interface YouTubeTokens {
   accessToken: string;
@@ -63,20 +79,6 @@ function getYouTubeCredentials() {
 
 export function getYouTubeRedirectUri(): string {
   return `${getAppUrl()}/api/auth/callback/youtube`;
-}
-
-export function buildYouTubeAuthUrl(state: string): string {
-  const { clientId } = getYouTubeCredentials();
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: getYouTubeRedirectUri(),
-    response_type: "code",
-    scope: YOUTUBE_SCOPES,
-    state,
-    access_type: "offline",
-    prompt: "consent",
-  });
-  return `${GOOGLE_AUTH_URL}?${params.toString()}`;
 }
 
 async function parseTokenResponse(res: Response): Promise<YouTubeTokens> {
@@ -315,4 +317,54 @@ export async function publishVideoToYouTube(
   }
 
   return { platformPostId, stats };
+}
+
+export interface YouTubeSourceVideo {
+  id: string;
+  title: string;
+  description: string;
+  publishedAt: string;
+}
+
+/** List recent uploads for Repurpose source detection. */
+export async function fetchYouTubeRecentUploads(
+  accessToken: string,
+  channelId: string,
+  maxResults = 5
+): Promise<YouTubeSourceVideo[]> {
+  const channelRes = await youtubeFetch(
+    `${YOUTUBE_CHANNELS_URL}?part=contentDetails&id=${encodeURIComponent(channelId)}`,
+    accessToken
+  );
+  const channelBody = await channelRes.json();
+  const uploadsPlaylistId =
+    channelBody.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+  if (!uploadsPlaylistId) return [];
+
+  const playlistRes = await youtubeFetch(
+    `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=${encodeURIComponent(uploadsPlaylistId)}&maxResults=${maxResults}`,
+    accessToken
+  );
+  const playlistBody = await playlistRes.json();
+  if (!playlistRes.ok) {
+    throw new Error(
+      playlistBody.error?.message || "Failed to fetch YouTube uploads"
+    );
+  }
+
+  return (playlistBody.items ?? []).map(
+    (item: {
+      snippet?: {
+        resourceId?: { videoId?: string };
+        title?: string;
+        description?: string;
+        publishedAt?: string;
+      };
+    }) => ({
+      id: item.snippet?.resourceId?.videoId ?? "",
+      title: item.snippet?.title ?? "YouTube Video",
+      description: item.snippet?.description ?? "",
+      publishedAt: item.snippet?.publishedAt ?? new Date().toISOString(),
+    })
+  ).filter((v: YouTubeSourceVideo) => v.id);
 }

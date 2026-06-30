@@ -7,6 +7,18 @@
     {
       "path": "/api/cron/usage-reset",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/publish-scheduled",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/inbox-sync",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/repurpose-sources",
+      "schedule": "*/15 * * * *"
     }
   ],
   "functions": {
@@ -17,6 +29,12 @@
       "maxDuration": 60
     },
     "src/app/api/reports/send/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/publish-scheduled/route.ts": {
+      "maxDuration": 60
+    },
+    "src/app/api/cron/repurpose-sources/route.ts": {
       "maxDuration": 60
     }
   }

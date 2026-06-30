@@ -12,6 +12,8 @@ import {
   INSTAGRAM_PERSONAL_ACCOUNT_NOTICE,
   INSTAGRAM_SETUP_STEPS,
 } from "@/lib/platforms/instagram";
+import { ConnectYouTubeModal } from "@/components/dashboard/connect-youtube-modal";
+import { ConnectFacebookPagesModal } from "@/components/dashboard/connect-facebook-pages-modal";
 
 interface ConnectedAccount {
   id: string;
@@ -32,6 +34,8 @@ function AccountsContent() {
   const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<ConnectedAccount[]>([]);
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [youtubeModalOpen, setYoutubeModalOpen] = useState(false);
+  const [facebookPickOpen, setFacebookPickOpen] = useState(false);
   const [accountName, setAccountName] = useState("");
   const [loading, setLoading] = useState(true);
   const [banner, setBanner] = useState<{
@@ -98,7 +102,17 @@ function AccountsContent() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (searchParams.get("facebook_pick") === "1") {
+      setFacebookPickOpen(true);
+    }
+  }, [searchParams]);
+
   function startConnect(platformId: string) {
+    if (platformId === "youtube") {
+      setYoutubeModalOpen(true);
+      return;
+    }
     if (OAUTH_PLATFORMS.has(platformId)) {
       window.location.href = `/api/connect/${platformId}`;
       return;
@@ -292,6 +306,22 @@ function AccountsContent() {
           </p>
         </div>
       )}
+
+      <ConnectYouTubeModal
+        open={youtubeModalOpen}
+        onClose={() => setYoutubeModalOpen(false)}
+      />
+      <ConnectFacebookPagesModal
+        open={facebookPickOpen}
+        onClose={() => setFacebookPickOpen(false)}
+        onConnected={() => {
+          setBanner({
+            type: "success",
+            message: "Facebook Page(s) connected successfully.",
+          });
+          loadAccounts();
+        }}
+      />
     </div>
   );
 }

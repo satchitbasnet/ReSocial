@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { eq, and } from "drizzle-orm";
 import { getSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
-import { connectedAccounts, followerSnapshots } from "@/lib/db/schema";
 import { getAppUrl } from "@/lib/config";
 import {
   exchangeFacebookCode,
   fetchFacebookPages,
 } from "@/lib/platforms/facebook";
+import { upsertFacebookPageConnection, PENDING_FACEBOOK_TOKEN_COOKIE } from "@/lib/platforms/facebook-connect";
 
 const STATE_COOKIE = "facebook_oauth_state";
+const COOKIE_TTL = 60 * 10;
 
 export async function GET(request: NextRequest) {
   const appUrl = getAppUrl();
@@ -50,56 +50,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(accountsUrl);
     }
 
-    const page = pages[0];
-    const db = getDb();
+    const cookieOpts = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      maxAge: COOKIE_TTL,
+      path: "/",
+    };
 
-    const [existing] = await db
-      .select()
-      .from(connectedAccounts)
-      .where(
-        and(
-          eq(connectedAccounts.userId, session.userId),
-          eq(connectedAccounts.platform, "facebook"),
-          eq(connectedAccounts.accountId, page.pageId)
-        )
-      )
-      .limit(1);
+    cookieStore.set(PENDING_FACEBOOK_TOKEN_COOKIE, tokens.accessToken, cookieOpts);
 
-    let accountRowId: string;
-
-    if (existing) {
-      await db
-        .update(connectedAccounts)
-        .set({
-          accountName: page.displayName,
-          accessToken: tokens.accessToken,
-          isActive: true,
-        })
-        .where(eq(connectedAccounts.id, existing.id));
-      accountRowId = existing.id;
-    } else {
-      const [inserted] = await db
-        .insert(connectedAccounts)
-        .values({
-          userId: session.userId,
-          platform: "facebook",
-          accountName: page.displayName,
-          accountId: page.pageId,
-          accessToken: tokens.accessToken,
-          isActive: true,
-        })
-        .returning({ id: connectedAccounts.id });
-      accountRowId = inserted.id;
+    if (pages.length === 1) {
+      const db = getDb();
+      await upsertFacebookPageConnection(db, session.userId, pages[0]);
+      cookieStore.delete(PENDING_FACEBOOK_TOKEN_COOKIE);
+      accountsUrl.searchParams.set("connected", "facebook");
+      return NextResponse.redirect(accountsUrl);
     }
 
-    await db.insert(followerSnapshots).values({
-      userId: session.userId,
-      accountId: accountRowId,
-      platform: "facebook",
-      followerCount: page.followerCount,
-    });
-
-    accountsUrl.searchParams.set("connected", "facebook");
+    accountsUrl.searchParams.set("facebook_pick", "1");
     return NextResponse.redirect(accountsUrl);
   } catch (err) {
     console.error("Facebook OAuth callback error:", err);

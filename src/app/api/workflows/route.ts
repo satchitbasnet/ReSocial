@@ -29,7 +29,10 @@ export async function GET() {
 
 const createSchema = z.object({
   name: z.string().min(1),
+  workflowType: z.enum(["new_content", "existing_content"]).default("new_content"),
+  contentType: z.enum(["video", "photos"]).default("video"),
   sourcePlatform: z.string().optional(),
+  sourceAccountId: z.string().uuid().optional(),
   targetPlatforms: z.array(z.string()).min(1),
   autoResize: z.boolean().default(true),
   removeWatermark: z.boolean().default(false),
@@ -54,7 +57,10 @@ export async function POST(request: NextRequest) {
       .values({
         userId: session.userId,
         name: parsed.data.name,
+        workflowType: parsed.data.workflowType,
+        contentType: parsed.data.contentType,
         sourcePlatform: parsed.data.sourcePlatform as PlatformId | undefined,
+        sourceAccountId: parsed.data.sourceAccountId,
         targetPlatforms: parsed.data.targetPlatforms,
         autoResize: parsed.data.autoResize,
         removeWatermark: parsed.data.removeWatermark,

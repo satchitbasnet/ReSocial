@@ -8,26 +8,12 @@ import {
   distributions,
   connectedAccounts,
   users,
-  postMetrics,
 } from "@/lib/db/schema";
-import { publishToPlatform } from "@/lib/platforms/publisher";
-import type { PlatformId } from "@/lib/constants";
-import { checkCanPublish, type UserPlan } from "@/lib/plans";
-import { fullSyncForUser, syncPostMetrics } from "@/lib/analytics/sync";
-import {
-  clearMediaProcessCache,
-  prepareMediaForPublish,
-} from "@/lib/media/processor";
 import { resolveWorkflowForPublish } from "@/lib/media/workflow";
-import {
-  backupToGoogleDrive,
-  extensionFromMediaUrl,
-  sanitizeBackupFilename,
-} from "@/lib/integrations/google-drive";
-import {
-  incrementUsage,
-  isOverFairUseCap,
-} from "@/lib/usage/tracker";
+import { executePublishForPost } from "@/lib/publish/execute-distributions";
+import { checkCanPublish, type UserPlan } from "@/lib/plans";
+import { resolvePublishContext } from "@/lib/team/publish-context";
+import { createApprovalRequest } from "@/lib/team/approvals";
 
 const createPostSchema = z.object({
   title: z.string().min(1),
@@ -101,11 +87,13 @@ export async function POST(request: NextRequest) {
       parsed.data;
 
     const db = getDb();
+    const publishCtx = await resolvePublishContext(session.userId, session.email);
+    const workspaceUserId = publishCtx.workspaceUserId;
 
     const [user] = await db
       .select()
       .from(users)
-      .where(eq(users.id, session.userId))
+      .where(eq(users.id, workspaceUserId))
       .limit(1);
 
     if (!user) {
@@ -123,17 +111,17 @@ export async function POST(request: NextRequest) {
     }
 
     const publishLimit = await checkCanPublish(
-      session.userId,
+      workspaceUserId,
       user.plan as UserPlan
     );
-    if (publishLimit && !scheduledAt) {
+    if (publishLimit && !scheduledAt && !publishCtx.requiresApproval) {
       return NextResponse.json(publishLimit, { status: 403 });
     }
 
     const accounts = await db
       .select()
       .from(connectedAccounts)
-      .where(eq(connectedAccounts.userId, session.userId));
+      .where(eq(connectedAccounts.userId, workspaceUserId));
 
     const targetAccounts = accounts.filter(
       (a) => platformIds.includes(a.platform) && a.isActive
@@ -148,21 +136,28 @@ export async function POST(request: NextRequest) {
 
     const workflow = await resolveWorkflowForPublish(
       db,
-      session.userId,
+      workspaceUserId,
       platformIds,
       workflowId
     );
 
+    const needsApproval = publishCtx.requiresApproval;
+    const postStatus = needsApproval
+      ? "pending_approval"
+      : scheduledAt
+        ? "scheduled"
+        : "processing";
+
     const [post] = await db
       .insert(posts)
       .values({
-        userId: session.userId,
+        userId: workspaceUserId,
         workflowId: workflow?.id ?? workflowId ?? null,
         title,
         caption: caption || "",
         mediaUrl,
         mediaType,
-        status: scheduledAt ? "scheduled" : "processing",
+        status: postStatus,
         scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
       })
       .returning();
@@ -175,161 +170,26 @@ export async function POST(request: NextRequest) {
           accountId: account.id,
           platform: account.platform,
           caption: captions?.[account.platform] || caption || "",
-          status: scheduledAt ? ("pending" as const) : ("processing" as const),
+          status: needsApproval
+            ? ("pending" as const)
+            : scheduledAt
+              ? ("pending" as const)
+              : ("processing" as const),
         }))
       )
       .returning();
 
-    // Publish asynchronously
-    if (!scheduledAt) {
-      clearMediaProcessCache();
-
-      const processOptions =
-        workflow &&
-        (workflow.autoResize || workflow.removeWatermark) &&
-        mediaType === "video"
-          ? {
-              autoResize: workflow.autoResize,
-              removeWatermark: workflow.removeWatermark,
-              sourcePlatform: workflow.sourcePlatform as PlatformId | null,
-              mediaType,
-            }
-          : null;
-
-      let publishSucceeded = false;
-
-      await Promise.all(
-        distRecords.map(async (dist) => {
-          const account = targetAccounts.find((a) => a.id === dist.accountId)!;
-
-          let publishMediaUrl = mediaUrl;
-          let processedDowngraded = false;
-
-          if (processOptions) {
-            const overCap = await isOverFairUseCap(session.userId);
-
-            if (overCap) {
-              processedDowngraded = true;
-            } else {
-              try {
-                const prepared = await prepareMediaForPublish(
-                  mediaUrl,
-                  account.platform as PlatformId,
-                  session.userId,
-                  processOptions
-                );
-                publishMediaUrl = prepared.url;
-                if (prepared.didRunFfmpeg) {
-                  await incrementUsage(session.userId, "processing");
-                }
-              } catch (procErr) {
-                console.error(
-                  `[ReSocial] Media processing failed for ${account.platform}:`,
-                  procErr
-                );
-                await db
-                  .update(distributions)
-                  .set({
-                    status: "failed",
-                    errorMessage:
-                      procErr instanceof Error
-                        ? procErr.message
-                        : "Media processing failed",
-                  })
-                  .where(eq(distributions.id, dist.id));
-                return;
-              }
-            }
-          }
-
-          const distCaption =
-            dist.caption?.trim() || caption || title;
-
-          const result = await publishToPlatform(
-            {
-              id: account.id,
-              platform: account.platform as PlatformId,
-              accountName: account.accountName,
-              accessToken: account.accessToken,
-              refreshToken: account.refreshToken,
-              accountId: account.accountId,
-            },
-            publishMediaUrl,
-            distCaption,
-            async (accessToken, refreshToken) => {
-              await db
-                .update(connectedAccounts)
-                .set({ accessToken, refreshToken })
-                .where(eq(connectedAccounts.id, account.id));
-            },
-            title
-          );
-
-          await db
-            .update(distributions)
-            .set({
-              status: result.success ? "published" : "failed",
-              platformPostId: result.platformPostId,
-              errorMessage: result.error,
-              processedDowngraded,
-              publishedAt: result.success ? new Date() : null,
-            })
-            .where(eq(distributions.id, dist.id));
-
-          if (result.success) {
-            publishSucceeded = true;
-          }
-
-          if (result.success && result.metrics) {
-            await db.insert(postMetrics).values({
-              userId: session.userId,
-              distributionId: dist.id,
-              postId: post.id,
-              platform: account.platform,
-              views: result.metrics.views,
-              likes: result.metrics.likes,
-              comments: result.metrics.comments,
-              shares: result.metrics.shares,
-              saves: result.metrics.saves,
-              engagementRate: result.metrics.engagementRate,
-            });
-          } else if (
-            result.success &&
-            (account.platform === "youtube" || account.platform === "instagram")
-          ) {
-            syncPostMetrics(dist.id).catch((err) =>
-              console.error(`${account.platform} metrics sync failed:`, err)
-            );
-          }
-        })
-      );
-
-      await db
-        .update(posts)
-        .set({ status: "published" })
-        .where(eq(posts.id, post.id));
-
-      await db
-        .update(users)
-        .set({ videosPublished: user.videosPublished + 1 })
-        .where(eq(users.id, session.userId));
-
-      await incrementUsage(session.userId, "post");
-
-      fullSyncForUser(session.userId).catch((err) =>
-        console.error("Post-publish analytics sync failed:", err)
-      );
-
-      if (publishSucceeded) {
-        const ext = extensionFromMediaUrl(mediaUrl);
-        const backupName = `${sanitizeBackupFilename(title)}.${ext}`;
-        backupToGoogleDrive(session.userId, mediaUrl, backupName).catch((err) =>
-          console.error("Google Drive backup failed:", err)
-        );
-      }
+    if (needsApproval) {
+      await createApprovalRequest(db, post.id, publishCtx.actorUserId);
+    } else if (!scheduledAt) {
+      await executePublishForPost(db, post.id, workspaceUserId);
     }
 
-    return NextResponse.json({ post, success: true });
+    return NextResponse.json({
+      post,
+      success: true,
+      pendingApproval: needsApproval,
+    });
   } catch (error) {
     console.error("Create post error:", error);
     return NextResponse.json({ error: "Failed to create post" }, { status: 500 });

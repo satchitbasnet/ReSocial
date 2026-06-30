@@ -6,6 +6,7 @@ import { PlatformIcon } from "@/components/ui/platform-icon";
 import { Button } from "@/components/ui/button";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import { cn } from "@/lib/utils";
+import { analyzeSentiment } from "@/lib/listening/sentiment";
 import {
   Inbox,
   RefreshCw,
@@ -15,6 +16,7 @@ import {
   MessageSquare,
   Bookmark,
   Trash2,
+  UserPlus,
 } from "lucide-react";
 
 interface InboxMessage {
@@ -58,6 +60,9 @@ export default function InboxPage() {
 
   const [newReplyTitle, setNewReplyTitle] = useState("");
   const [newReplyContent, setNewReplyContent] = useState("");
+  const [teamMembers, setTeamMembers] = useState<
+    { id: string | null; email: string; role: string }[]
+  >([]);
 
   const loadMessages = useCallback(async () => {
     setLoading(true);
@@ -77,10 +82,23 @@ export default function InboxPage() {
     fetch("/api/inbox/saved-replies")
       .then((r) => r.json())
       .then((d) => d.replies && setSavedReplies(d.replies));
-    fetch("/api/accounts")
+    fetch("/api/team")
       .then((r) => r.json())
-      .then(() => {
-        /* plan from session would need dedicated endpoint; infer from accounts response if added */
+      .then((d) => {
+        if (d.members) {
+          setTeamMembers(
+            d.members
+              .filter(
+                (m: { status: string; memberId: string | null }) =>
+                  m.status === "active" && m.memberId
+              )
+              .map((m: { memberId: string; email: string; role: string }) => ({
+                id: m.memberId,
+                email: m.email,
+                role: m.role,
+              }))
+          );
+        }
       });
   }, [loadMessages]);
 
@@ -144,6 +162,21 @@ export default function InboxPage() {
     } finally {
       setSending(false);
     }
+  }
+
+  async function assignMessage(memberId: string | null) {
+    if (!selected) return;
+    await fetch(`/api/inbox/${selected.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ assignedToUserId: memberId }),
+    });
+    setSelected({ ...selected, assignedToUserId: memberId });
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === selected.id ? { ...m, assignedToUserId: memberId } : m
+      )
+    );
   }
 
   async function saveTemplate() {
@@ -350,6 +383,28 @@ export default function InboxPage() {
                     <span className="text-xs text-gray-400 capitalize">{selected.type}</span>
                   </div>
                   <p className="text-gray-700 text-sm whitespace-pre-wrap">{selected.content}</p>
+                  <p className="text-xs text-gray-500 mt-2 capitalize">
+                    Sentiment: {analyzeSentiment(selected.content)}
+                  </p>
+                  {teamMembers.length > 0 && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <UserPlus size={14} className="text-gray-400" />
+                      <select
+                        value={selected.assignedToUserId ?? ""}
+                        onChange={(e) =>
+                          assignMessage(e.target.value || null)
+                        }
+                        className="text-xs rounded-lg border border-gray-200 px-2 py-1"
+                      >
+                        <option value="">Unassigned</option>
+                        {teamMembers.map((m) => (
+                          <option key={m.email} value={m.id ?? ""}>
+                            {m.email} ({m.role})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   {selected.postTitle && (
                     <p className="text-xs text-gray-400 mt-3">
                       On post: <span className="font-medium">{selected.postTitle}</span>

@@ -26,6 +26,7 @@ export const postStatusEnum = pgEnum("post_status", [
   "draft",
   "processing",
   "scheduled",
+  "pending_approval",
   "published",
   "failed",
 ]);
@@ -63,6 +64,11 @@ export const accountTypeEnum = pgEnum("account_type", [
   "small_business",
   "agency",
 ]);
+export const workflowTypeEnum = pgEnum("workflow_type", [
+  "new_content",
+  "existing_content",
+]);
+export const contentTypeEnum = pgEnum("content_type", ["video", "photos"]);
 
 export const users = pgTable("users", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -116,6 +122,7 @@ export const connectedAccounts = pgTable("connected_accounts", {
   accountId: text("account_id"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
+  oauthScopes: text("oauth_scopes"),
   isActive: boolean("is_active").default(true).notNull(),
   connectedAt: timestamp("connected_at").defaultNow().notNull(),
 });
@@ -140,11 +147,21 @@ export const workflows = pgTable("workflows", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
+  workflowType: workflowTypeEnum("workflow_type")
+    .default("new_content")
+    .notNull(),
+  contentType: contentTypeEnum("content_type").default("video").notNull(),
   sourcePlatform: platformEnum("source_platform"),
+  sourceAccountId: uuid("source_account_id").references(
+    () => connectedAccounts.id,
+    { onDelete: "set null" }
+  ),
   targetPlatforms: jsonb("target_platforms").$type<string[]>().notNull(),
   autoResize: boolean("auto_resize").default(true).notNull(),
   removeWatermark: boolean("remove_watermark").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  lastPolledAt: timestamp("last_polled_at"),
+  pollCursor: jsonb("poll_cursor").$type<Record<string, string>>(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -335,6 +352,18 @@ export const hashtagStats = pgTable("hashtag_stats", {
   trendScore: integer("trend_score").default(0).notNull(),
 });
 
+export const trackedKeywords = pgTable("tracked_keywords", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  keyword: text("keyword").notNull(),
+  platform: platformEnum("platform"),
+  sentiment: text("sentiment"),
+  mentionCount: integer("mention_count").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const teamMembers = pgTable("team_members", {
   id: uuid("id").defaultRandom().primaryKey(),
   ownerId: uuid("owner_id")
@@ -447,6 +476,7 @@ export type Distribution = typeof distributions.$inferSelect;
 export type InboxMessage = typeof inboxMessages.$inferSelect;
 export type SavedReply = typeof savedReplies.$inferSelect;
 export type TrackedHashtag = typeof trackedHashtags.$inferSelect;
+export type TrackedKeyword = typeof trackedKeywords.$inferSelect;
 export type HashtagStat = typeof hashtagStats.$inferSelect;
 export type TeamMember = typeof teamMembers.$inferSelect;
 export type PostApproval = typeof postApprovals.$inferSelect;
