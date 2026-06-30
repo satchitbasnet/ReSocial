@@ -8,7 +8,7 @@ const FB_GRAPH_BASE = `https://graph.facebook.com/${FB_GRAPH_VERSION}`;
 const IG_AUTH_URL = "https://www.instagram.com/oauth/authorize";
 const IG_TOKEN_URL = "https://api.instagram.com/oauth/access_token";
 
-/** Instagram API with Instagram Login (same flow as Repurpose.io). */
+/** Instagram API with Instagram Login. */
 const INSTAGRAM_SCOPES = [
   "instagram_business_basic",
   "instagram_business_content_publish",
@@ -47,19 +47,7 @@ export type TokenRefreshHandler = (
 ) => Promise<void>;
 
 export const INSTAGRAM_PERSONAL_ACCOUNT_NOTICE =
-  "Personal Instagram accounts cannot connect. Switch to a free Professional account (Creator or Business) in the Instagram app — no Facebook Page required.";
-
-export const INSTAGRAM_CONNECT_NOTES = {
-  reels:
-    "To publish Reels, photos, and carousels, your Instagram must be a Creator or Business account.",
-  stories: "To publish Stories, your Instagram must be a Business account.",
-} as const;
-
-export const INSTAGRAM_SETUP_STEPS = [
-  "Instagram app → Profile → menu → Account type and tools → Switch to professional account → choose Creator.",
-  "Return here and tap Connect on Instagram.",
-  "Sign in with Instagram and allow ReSocial to publish content.",
-] as const;
+  "A Creator or Business Instagram account is required to connect.";
 
 class InstagramApiError extends Error {
   constructor(

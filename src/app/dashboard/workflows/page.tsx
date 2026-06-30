@@ -120,8 +120,8 @@ export default function WorkflowsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Workflows</h1>
           <p className="text-gray-600">
-            Automate repurposing like Repurpose.io — pick a source, choose
-            destinations, and let ReSocial distribute new or existing content.
+            Automate cross-posting — pick a source, choose destinations, and let
+            ReSocial distribute new or existing content.
           </p>
         </div>
         <Button onClick={() => setShowForm(!showForm)} size="sm">
@@ -136,11 +136,11 @@ export default function WorkflowsPage() {
           <li>Connect accounts on Connected Accounts</li>
           <li>Create a workflow: source (left) → destinations (right)</li>
           <li>
-            <strong>Repurpose new content</strong> — auto-share when you publish
-            on the source (polled every 15 min)
+            <strong>New content</strong> — auto-share when you publish on the
+            source (polled every 15 min)
           </li>
           <li>
-            <strong>Repurpose existing content</strong> — backfills up to 25
+            <strong>Existing content</strong> — backfills up to 25 posts from
             posts from your source (one per cron run)
           </li>
         </ol>
@@ -165,8 +165,8 @@ export default function WorkflowsPage() {
               <div className="flex flex-wrap gap-2">
                 {(
                   [
-                    ["new_content", "Repurpose new content"],
-                    ["existing_content", "Repurpose existing content"],
+                    ["new_content", "New content"],
+                    ["existing_content", "Existing content"],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -187,7 +187,7 @@ export default function WorkflowsPage() {
               {workflowType === "existing_content" ? (
                 <p className="text-xs text-gray-500 mt-2">
                   Backfills your last 25 posts from the source account (one per
-                  cron run). Already repurposed items are skipped.
+                  cron run). Already distributed items are skipped.
                 </p>
               ) : (
                 <p className="text-xs text-gray-500 mt-2">

@@ -51,7 +51,7 @@ export default function ApprovalsPage() {
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">Content Approvals</h1>
       <p className="text-gray-600 mb-8">
-        Hootsuite-style approval queue. Editors submit posts; admins approve before
+        Review queue for your team. Editors submit posts; admins approve before
         they publish or go live on the calendar.
       </p>
 

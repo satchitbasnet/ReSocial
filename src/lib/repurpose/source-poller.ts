@@ -273,7 +273,7 @@ async function pollInstagramWorkflow(db: Db, wf: Workflow): Promise<number> {
 
   for (const item of candidates.slice(0, MAX_ITEMS_PER_POLL)) {
     const ok = await createRepurposePost(db, wf, {
-      title: item.caption.slice(0, 80) || "Instagram Repurpose",
+      title: item.caption.slice(0, 80) || "From Instagram",
       caption: item.caption,
       mediaUrl: item.mediaUrl,
       mediaUrls: item.mediaUrls,
@@ -367,7 +367,7 @@ async function pollYouTubeWorkflow(db: Db, wf: Workflow): Promise<number> {
         video.id
       );
       const ok = await createRepurposePost(db, wf, {
-        title: video.title.slice(0, 100) || "YouTube Repurpose",
+        title: video.title.slice(0, 100) || "From YouTube",
         caption: video.description || video.title,
         mediaUrl,
         mediaType: "video",
@@ -466,7 +466,7 @@ async function pollFacebookWorkflow(db: Db, wf: Workflow): Promise<number> {
 
   for (const item of candidates.slice(0, MAX_ITEMS_PER_POLL)) {
     const ok = await createRepurposePost(db, wf, {
-      title: item.caption.slice(0, 80) || "Facebook Repurpose",
+      title: item.caption.slice(0, 80) || "From Facebook",
       caption: item.caption,
       mediaUrl: item.mediaUrl,
       mediaUrls: item.mediaUrls,
@@ -556,7 +556,7 @@ async function pollTikTokWorkflow(db: Db, wf: Workflow): Promise<number> {
         video.shareUrl
       );
       const ok = await createRepurposePost(db, wf, {
-        title: video.title.slice(0, 100) || "TikTok Repurpose",
+        title: video.title.slice(0, 100) || "From TikTok",
         caption: video.description || video.title,
         mediaUrl,
         mediaType: "video",
