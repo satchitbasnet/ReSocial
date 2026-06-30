@@ -4,6 +4,7 @@ import {
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { put as putBlob } from "@vercel/blob";
 import { randomBytes } from "crypto";
 
 const ALLOWED_MIME: Record<string, string> = {
@@ -120,25 +121,39 @@ export async function uploadMediaBuffer(
   buffer: Buffer,
   contentType = "video/mp4"
 ): Promise<string> {
-  if (!isR2Configured()) {
-    throw new Error("R2 is not configured");
-  }
-
   const ext = mimeToExtension(contentType);
   const key = buildObjectKey(userId, ext);
-  const { bucket } = getR2Config();
-  const client = getR2Client();
 
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: buffer,
-      ContentType: contentType,
-    })
-  );
+  if (isR2Configured()) {
+    const { bucket } = getR2Config();
+    const client = getR2Client();
 
-  return getPublicMediaUrl(key);
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: buffer,
+        ContentType: contentType,
+      })
+    );
+
+    return getPublicMediaUrl(key);
+  }
+
+  if (isBlobConfigured()) {
+    const { url } = await putBlob(key, buffer, {
+      access: "public",
+      contentType,
+      addRandomSuffix: false,
+    });
+    return url;
+  }
+
+  throw new Error("Media storage is not configured");
+}
+
+export function isBlobConfigured(): boolean {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 export function isR2Configured(): boolean {
@@ -149,4 +164,14 @@ export function isR2Configured(): boolean {
       process.env.R2_BUCKET_NAME &&
       process.env.R2_PUBLIC_URL
   );
+}
+
+export function isMediaStorageConfigured(): boolean {
+  return isR2Configured() || isBlobConfigured();
+}
+
+export function getMediaStorageProvider(): "r2" | "vercel-blob" | null {
+  if (isR2Configured()) return "r2";
+  if (isBlobConfigured()) return "vercel-blob";
+  return null;
 }

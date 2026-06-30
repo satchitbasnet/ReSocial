@@ -128,34 +128,61 @@ export default function UploadPage() {
         return;
       }
 
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: file.name,
-          contentType: file.type,
-          contentLength: file.size,
-        }),
-      });
-      const uploadData = await uploadRes.json();
-
-      if (!uploadRes.ok) {
-        if (uploadData.upgradeRequired) {
-          setUpgradeModal({ open: true, limit: uploadData.limit ?? "videos" });
-        }
-        setError(uploadData.error || "Upload failed");
+      const storageRes = await fetch("/api/upload");
+      const storage = await storageRes.json();
+      if (!storageRes.ok || !storage.configured) {
+        setError(
+          storage.error ||
+            "Media storage is not configured. Connect Vercel Blob or set R2 variables."
+        );
         return;
       }
 
-      const putRes = await fetch(uploadData.uploadUrl, {
-        method: "PUT",
-        headers: { "Content-Type": uploadData.contentType },
-        body: file,
-      });
+      let mediaUrl: string;
+      let mediaType: string;
 
-      if (!putRes.ok) {
-        setError("Failed to upload file to storage. Please try again.");
-        return;
+      if (storage.provider === "vercel-blob") {
+        const { upload } = await import("@vercel/blob/client");
+        const pathname = `${Date.now()}-${file.name}`;
+        const blob = await upload(pathname, file, {
+          access: "public",
+          handleUploadUrl: "/api/upload",
+        });
+        mediaUrl = blob.url;
+        mediaType = file.type.startsWith("video/") ? "video" : "image";
+      } else {
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            contentLength: file.size,
+          }),
+        });
+        const uploadData = await uploadRes.json();
+
+        if (!uploadRes.ok) {
+          if (uploadData.upgradeRequired) {
+            setUpgradeModal({ open: true, limit: uploadData.limit ?? "videos" });
+          }
+          setError(uploadData.error || "Upload failed");
+          return;
+        }
+
+        const putRes = await fetch(uploadData.uploadUrl, {
+          method: "PUT",
+          headers: { "Content-Type": uploadData.contentType },
+          body: file,
+        });
+
+        if (!putRes.ok) {
+          setError("Failed to upload file to storage. Please try again.");
+          return;
+        }
+
+        mediaUrl = uploadData.mediaUrl;
+        mediaType = uploadData.mediaType;
       }
 
       setUploading(false);
@@ -173,8 +200,8 @@ export default function UploadPage() {
               (sameCaption ? caption : platformCaptions[p]) || caption,
             ])
           ),
-          mediaUrl: uploadData.mediaUrl,
-          mediaType: uploadData.mediaType,
+          mediaUrl: mediaUrl,
+          mediaType: mediaType,
           platformIds: selectedPlatforms,
           scheduledAt: !publishNow && scheduleDate ? scheduleDate : undefined,
         }),
