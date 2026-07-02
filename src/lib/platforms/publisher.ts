@@ -170,13 +170,20 @@ export async function publishToPlatform(
       };
     }
     try {
+      const refreshHandler: TokenRefreshHandler | undefined = onTokenRefresh
+        ? async (newAccessToken) => {
+            await onTokenRefresh(newAccessToken, account.refreshToken ?? "");
+          }
+        : undefined;
+
       if (publishingPhotos) {
         const { platformPostId, stats } = await publishPhotosToInstagram(
           account.accessToken,
           account.accountId,
           photoUrls,
           caption,
-          account.refreshToken
+          account.refreshToken,
+          refreshHandler
         );
         return { success: true, platformPostId, metrics: stats };
       }
@@ -186,7 +193,8 @@ export async function publishToPlatform(
         account.accountId,
         mediaUrl,
         caption,
-        account.refreshToken
+        account.refreshToken,
+        refreshHandler
       );
       return { success: true, platformPostId, metrics: stats };
     } catch (err) {

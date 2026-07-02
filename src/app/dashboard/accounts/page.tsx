@@ -12,6 +12,7 @@ import {
 } from "@/lib/platforms/instagram";
 import { ConnectYouTubeModal } from "@/components/dashboard/connect-youtube-modal";
 import { ConnectFacebookPagesModal } from "@/components/dashboard/connect-facebook-pages-modal";
+import { OAuthSetupPanel } from "@/components/dashboard/oauth-setup-panel";
 
 interface ConnectedAccount {
   id: string;
@@ -166,6 +167,8 @@ function AccountsContent() {
           the platform&apos;s app settings.
         </p>
       </div>
+
+      <OAuthSetupPanel />
 
       {banner && (
         <div
