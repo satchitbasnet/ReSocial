@@ -18,6 +18,7 @@ import {
   fetchInstagramMediaStats,
   getInstagramUserId,
   isLegacyInstagramAccountId,
+  refreshInstagramAccessToken,
 } from "@/lib/platforms/instagram";
 import { fetchFacebookVideoStats, fetchFacebookPages } from "@/lib/platforms/facebook";
 import {
@@ -110,11 +111,26 @@ export async function syncPostMetrics(distributionId: string): Promise<void> {
           );
         }
       } else {
-        metrics = await fetchInstagramMediaStats(
-          row.platformPostId,
-          userToken,
-          true
-        );
+        let token = userToken;
+        try {
+          metrics = await fetchInstagramMediaStats(
+            row.platformPostId,
+            token,
+            true
+          );
+        } catch {
+          const refreshed = await refreshInstagramAccessToken(token);
+          token = refreshed.accessToken;
+          await db
+            .update(connectedAccounts)
+            .set({ accessToken: token })
+            .where(eq(connectedAccounts.id, row.connectedAccountId));
+          metrics = await fetchInstagramMediaStats(
+            row.platformPostId,
+            token,
+            true
+          );
+        }
       }
       }
     } else if (row.platform === "facebook" && row.platformAccountId) {

@@ -174,6 +174,49 @@ export async function exchangeInstagramCode(code: string): Promise<MetaTokens> {
   };
 }
 
+/** Refresh a long-lived Instagram Login token (extends ~60 days). */
+export async function refreshInstagramAccessToken(
+  accessToken: string
+): Promise<{ accessToken: string; expiresIn: number }> {
+  const res = await fetch(
+    `https://graph.instagram.com/refresh_access_token?${new URLSearchParams({
+      grant_type: "ig_refresh_token",
+      access_token: accessToken,
+    })}`
+  );
+  const body = (await res.json()) as {
+    access_token?: string;
+    expires_in?: number;
+    error?: { message?: string };
+  };
+
+  if (!res.ok || !body.access_token) {
+    throw new Error(body.error?.message || "Instagram token refresh failed");
+  }
+
+  return {
+    accessToken: body.access_token,
+    expiresIn: body.expires_in ?? 5184000,
+  };
+}
+
+async function withInstagramTokenRefresh<T>(
+  accessToken: string,
+  onRefresh: TokenRefreshHandler | undefined,
+  fn: (token: string) => Promise<T>
+): Promise<T> {
+  try {
+    return await fn(accessToken);
+  } catch (err) {
+    if (err instanceof InstagramApiError && err.status === 401 && onRefresh) {
+      const refreshed = await refreshInstagramAccessToken(accessToken);
+      await onRefresh(refreshed.accessToken, "");
+      return fn(refreshed.accessToken);
+    }
+    throw err;
+  }
+}
+
 async function igGraphGet<T>(path: string, accessToken: string): Promise<T> {
   const url = `${IG_GRAPH_BASE}${path}${path.includes("?") ? "&" : "?"}access_token=${encodeURIComponent(accessToken)}`;
   const res = await fetch(url);
@@ -486,7 +529,8 @@ export async function publishPhotosToInstagram(
   accountId: string | null,
   imageUrls: string[],
   caption: string,
-  storedPageAccessToken?: string | null
+  storedPageAccessToken?: string | null,
+  onTokenRefresh?: TokenRefreshHandler
 ): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
   if (!accountId) {
     throw new Error("Instagram account ID missing");
@@ -502,18 +546,19 @@ export async function publishPhotosToInstagram(
     throw new Error("Instagram carousels support up to 10 images.");
   }
 
-  const { igUserId, token, useInstagramGraph } =
-    await resolveInstagramPublishContext(
-      accessToken,
-      accountId,
-      storedPageAccessToken
-    );
-  const graphPost = useInstagramGraph ? igGraphPost : fbGraphPost;
+  const publish = async (token: string) => {
+    const { igUserId, token: publishToken, useInstagramGraph } =
+      await resolveInstagramPublishContext(
+        token,
+        accountId,
+        storedPageAccessToken
+      );
+    const graphPost = useInstagramGraph ? igGraphPost : fbGraphPost;
 
   if (urls.length === 1) {
     const container = await graphPost<{ id: string }>(
       `/${igUserId}/media`,
-      token,
+      publishToken,
       {
         image_url: urls[0],
         caption: caption.slice(0, 2200),
@@ -521,7 +566,7 @@ export async function publishPhotosToInstagram(
     );
     return publishInstagramContainer(
       igUserId,
-      token,
+      publishToken,
       container.id,
       useInstagramGraph
     );
@@ -529,15 +574,15 @@ export async function publishPhotosToInstagram(
 
   const childIds: string[] = [];
   for (const imageUrl of urls) {
-    const child = await graphPost<{ id: string }>(`/${igUserId}/media`, token, {
+    const child = await graphPost<{ id: string }>(`/${igUserId}/media`, publishToken, {
       image_url: imageUrl,
       is_carousel_item: true,
     });
     childIds.push(child.id);
-    await waitForInstagramContainer(child.id, token, useInstagramGraph);
+    await waitForInstagramContainer(child.id, publishToken, useInstagramGraph);
   }
 
-  const carousel = await graphPost<{ id: string }>(`/${igUserId}/media`, token, {
+  const carousel = await graphPost<{ id: string }>(`/${igUserId}/media`, publishToken, {
     media_type: "CAROUSEL",
     children: childIds.join(","),
     caption: caption.slice(0, 2200),
@@ -545,10 +590,17 @@ export async function publishPhotosToInstagram(
 
   return publishInstagramContainer(
     igUserId,
-    token,
+    publishToken,
     carousel.id,
     useInstagramGraph
   );
+  };
+
+  if (isLegacyInstagramAccountId(accountId)) {
+    return publish(accessToken);
+  }
+
+  return withInstagramTokenRefresh(accessToken, onTokenRefresh, publish);
 }
 
 export async function publishVideoToInstagram(
@@ -556,7 +608,8 @@ export async function publishVideoToInstagram(
   accountId: string | null,
   mediaUrl: string,
   caption: string,
-  storedPageAccessToken?: string | null
+  storedPageAccessToken?: string | null,
+  onTokenRefresh?: TokenRefreshHandler
 ): Promise<{ platformPostId: string; stats?: InstagramVideoStats }> {
   if (!accountId) {
     throw new Error("Instagram account ID missing");
@@ -568,14 +621,22 @@ export async function publishVideoToInstagram(
     );
   }
 
-  const { igUserId, token, useInstagramGraph } =
-    await resolveInstagramPublishContext(
-      accessToken,
-      accountId,
-      storedPageAccessToken
-    );
+  const publish = async (token: string) => {
+    const { igUserId, token: publishToken, useInstagramGraph } =
+      await resolveInstagramPublishContext(
+        token,
+        accountId,
+        storedPageAccessToken
+      );
 
-  return publishReel(igUserId, token, mediaUrl, caption, useInstagramGraph);
+    return publishReel(igUserId, publishToken, mediaUrl, caption, useInstagramGraph);
+  };
+
+  if (isLegacyInstagramAccountId(accountId)) {
+    return publish(accessToken);
+  }
+
+  return withInstagramTokenRefresh(accessToken, onTokenRefresh, publish);
 }
 
 export interface InstagramSourceMedia {

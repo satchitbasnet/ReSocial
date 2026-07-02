@@ -111,14 +111,26 @@ src/
 
 > **Note:** Render's filesystem is ephemeral. For production, replace local file uploads with cloud storage (S3, Vercel Blob, etc.).
 
-## Platform Integrations
+## Platform Integrations (OAuth)
 
-The MVP includes a publisher abstraction layer. Each platform currently simulates publishing for demo purposes. To enable real OAuth publishing:
+TikTok, YouTube, Instagram, Facebook, and Google Drive use real OAuth flows:
 
-1. Register apps with each platform's developer portal
-2. Add OAuth client IDs/secrets to `.env.local`
-3. Implement OAuth callback routes
-4. Replace simulated `publishToPlatform()` with real API calls
+1. Register apps in each platform's developer portal
+2. Add client IDs/secrets to `.env.local` (see `.env.example`)
+3. Register **exact** redirect URIs shown in Dashboard → Accounts → **OAuth setup check**
+4. Connect accounts from **Dashboard → Accounts**
+
+| Platform | Callback path |
+|----------|----------------|
+| TikTok | `/api/auth/callback/tiktok` |
+| YouTube | `/api/auth/callback/youtube` |
+| Instagram | `/api/auth/callback/instagram` |
+| Facebook | `/api/auth/callback/facebook` |
+| Google Drive | `/api/auth/callback/google-drive` |
+
+**Troubleshooting:** Log in and open **Dashboard → Accounts → Run check** (or `GET /api/health/oauth`) to verify env vars and redirect URIs.
+
+X (Twitter), Pinterest, and Snapchat still use demo connections until OAuth is added for those platforms.
 
 ## License
 
