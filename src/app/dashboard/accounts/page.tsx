@@ -12,6 +12,7 @@ import {
 } from "@/lib/platforms/instagram";
 import { ConnectYouTubeModal } from "@/components/dashboard/connect-youtube-modal";
 import { ConnectFacebookPagesModal } from "@/components/dashboard/connect-facebook-pages-modal";
+import { OAuthSetupHelp } from "@/components/dashboard/oauth-setup-help";
 
 interface ConnectedAccount {
   id: string;
@@ -90,6 +91,8 @@ function AccountsContent() {
         facebook_no_pages:
           "No Facebook Pages found. Create a Page and try again.",
         invalid_state: "Invalid OAuth state. Please try connecting again.",
+        session_expired:
+          "Your session expired during authorization. Log in and connect again without leaving the tab open too long.",
         plan_limit_platforms:
           "Platform limit reached for your plan. Upgrade to connect more.",
       };
@@ -166,6 +169,8 @@ function AccountsContent() {
           the platform&apos;s app settings.
         </p>
       </div>
+
+      <OAuthSetupHelp />
 
       {banner && (
         <div
