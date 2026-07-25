@@ -19,65 +19,66 @@ export default function HomePage() {
           subtitle="Connect with all major social media platforms. Upload once and automatically post videos, stories, and audio across TikTok, YouTube, Instagram, Facebook, X, and more."
         />
 
-        <section className="py-16 border-y glass-divider">
+        <section className="py-16 border-y border-ink/10 paper-surface">
           <div className="mx-auto max-w-7xl px-6 text-center">
-            <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-8">
-              Trusted Integration Partners
-            </p>
+            <p className="hud-label mb-8">Trusted Integration Partners</p>
             <PlatformLogos />
           </div>
         </section>
 
-        <section className="py-20">
+        <section className="paper-surface py-20">
           <div className="mx-auto max-w-7xl px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="font-display text-3xl font-bold text-gray-900 mb-6">
+                <p className="hud-label mb-3 text-tally">Outcomes</p>
+                <h2 className="font-display text-3xl font-extrabold tracking-tight text-ink mb-6">
                   Make Waves on Social
                 </h2>
                 <div className="space-y-6">
                   <div className="flex gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                      <Clock size={24} />
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-ink/15 text-tally">
+                      <Clock size={24} strokeWidth={1.75} />
                     </div>
                     <div>
-                      <p className="font-display font-semibold text-gray-900">
+                      <p className="font-display font-bold text-ink">
                         Save Up to 20 Hours per Week
                       </p>
-                      <p className="text-gray-600 text-sm mt-1">
+                      <p className="text-ink-muted text-sm mt-1">
                         Automatic Cross-Platform Posting Eliminates Manual Uploads
                       </p>
                     </div>
                   </div>
                   <div className="flex gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                      <TrendingUp size={24} />
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-ink/15 text-tally">
+                      <TrendingUp size={24} strokeWidth={1.75} />
                     </div>
                     <div>
-                      <p className="font-display font-semibold text-gray-900">
+                      <p className="font-display font-bold text-ink">
                         Up to 50% More Engagement
                       </p>
-                      <p className="text-gray-600 text-sm mt-1">
+                      <p className="text-ink-muted text-sm mt-1">
                         Achieve 30% Follower Growth With Omnipresence
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="gradient-bg rounded-3xl p-8 text-white">
+              <div className="border border-ink bg-ink p-8 text-paper">
                 <div className="space-y-4">
-                  <div className="bg-white/10 rounded-xl p-4 backdrop-blur">
-                    <p className="text-sm opacity-80">Upload Once</p>
-                    <p className="font-semibold">Your video → ReSocial</p>
+                  <div className="border border-white/15 p-4">
+                    <p className="hud-label text-tally mb-1">Upload Once</p>
+                    <p className="font-display font-semibold">Your video → ReSocial</p>
                   </div>
                   <div className="flex justify-center">
-                    <div className="h-8 w-px bg-white/30" />
+                    <div className="h-8 w-px bg-white/25" />
                   </div>
                   <div className="grid grid-cols-3 gap-3">
                     {["TikTok", "YouTube", "Instagram"].map((p) => (
-                      <div key={p} className="bg-white/10 rounded-xl p-3 text-center backdrop-blur">
+                      <div key={p} className="border border-white/15 p-3 text-center">
                         <p className="text-xs font-medium">{p}</p>
-                        <p className="text-green-300 text-xs mt-1">✓ Published</p>
+                        <p className="text-tally text-xs mt-1 font-mono tracking-wider">
+                          PUBLISHED
+                        </p>
                       </div>
                     ))}
                   </div>

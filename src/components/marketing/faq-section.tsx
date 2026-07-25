@@ -9,33 +9,31 @@ export function FAQSection() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="py-24">
+    <section className="paper-surface py-24">
       <div className="mx-auto max-w-3xl px-6">
-        <h2 className="font-display text-3xl font-bold text-gray-900 text-center mb-12">
+        <p className="hud-label mb-3 text-center text-tally">FAQ</p>
+        <h2 className="font-display text-3xl font-extrabold tracking-tight text-ink text-center mb-12">
           Questions? We&apos;ve Got Answers.
         </h2>
 
         <div className="space-y-3">
           {FAQ.map((item, i) => (
-            <div
-              key={i}
-              className="glass-card overflow-hidden"
-            >
+            <div key={i} className="frame-card overflow-hidden">
               <button
-                className="w-full flex items-center justify-between p-5 text-left"
+                className="flex w-full items-center justify-between p-5 text-left"
                 onClick={() => setOpen(open === i ? null : i)}
               >
-                <span className="font-medium text-gray-900">{item.q}</span>
+                <span className="font-medium text-ink">{item.q}</span>
                 <ChevronDown
                   size={20}
                   className={cn(
-                    "text-gray-400 transition-transform shrink-0 ml-4",
-                    open === i && "rotate-180"
+                    "ml-4 shrink-0 text-ink-muted transition-transform",
+                    open === i && "rotate-180 text-tally"
                   )}
                 />
               </button>
               {open === i && (
-                <div className="px-5 pb-5 text-gray-600 text-sm leading-relaxed">
+                <div className="border-t border-ink/10 px-5 pb-5 pt-3 text-sm leading-relaxed text-ink-muted">
                   {item.a}
                 </div>
               )}

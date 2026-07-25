@@ -1,3 +1,11 @@
+# Shared secret so cron services authenticate the same way route handlers expect
+# (Authorization: Bearer $CRON_SECRET).
+envVarGroups:
+  - name: resocial-cron
+    envVars:
+      - key: CRON_SECRET
+        generateValue: true
+
 services:
   - type: web
     name: resocial
@@ -17,3 +25,94 @@ services:
         sync: false
       - key: NEXT_PUBLIC_APP_URL
         sync: false
+      - fromGroup: resocial-cron
+
+  # Every 5 minutes — publish posts whose scheduledAt has passed.
+  - type: cron
+    name: resocial-publish-scheduled
+    runtime: node
+    schedule: "*/5 * * * *"
+    buildCommand: "true"
+    startCommand: >-
+      curl -fsS -X GET
+      -H "Authorization: Bearer $CRON_SECRET"
+      "$CRON_BASE_URL/api/cron/publish-scheduled"
+    envVars:
+      - fromGroup: resocial-cron
+      - key: CRON_BASE_URL
+        fromService:
+          name: resocial
+          type: web
+          envVarKey: NEXT_PUBLIC_APP_URL
+
+  # Every 15 minutes — poll workflow sources for new content to repurpose.
+  - type: cron
+    name: resocial-repurpose-sources
+    runtime: node
+    schedule: "*/15 * * * *"
+    buildCommand: "true"
+    startCommand: >-
+      curl -fsS -X GET
+      -H "Authorization: Bearer $CRON_SECRET"
+      "$CRON_BASE_URL/api/cron/repurpose-sources"
+    envVars:
+      - fromGroup: resocial-cron
+      - key: CRON_BASE_URL
+        fromService:
+          name: resocial
+          type: web
+          envVarKey: NEXT_PUBLIC_APP_URL
+
+  # Hourly — sync inbox comments for users with connected accounts.
+  - type: cron
+    name: resocial-inbox-sync
+    runtime: node
+    schedule: "0 * * * *"
+    buildCommand: "true"
+    startCommand: >-
+      curl -fsS -X GET
+      -H "Authorization: Bearer $CRON_SECRET"
+      "$CRON_BASE_URL/api/cron/inbox-sync"
+    envVars:
+      - fromGroup: resocial-cron
+      - key: CRON_BASE_URL
+        fromService:
+          name: resocial
+          type: web
+          envVarKey: NEXT_PUBLIC_APP_URL
+
+  # Daily — sync Stripe billing periods and roll forward expired usage meters.
+  - type: cron
+    name: resocial-usage-reset
+    runtime: node
+    schedule: "0 6 * * *"
+    buildCommand: "true"
+    startCommand: >-
+      curl -fsS -X GET
+      -H "Authorization: Bearer $CRON_SECRET"
+      "$CRON_BASE_URL/api/cron/usage-reset"
+    envVars:
+      - fromGroup: resocial-cron
+      - key: CRON_BASE_URL
+        fromService:
+          name: resocial
+          type: web
+          envVarKey: NEXT_PUBLIC_APP_URL
+
+  # Daily — send scheduled email reports.
+  - type: cron
+    name: resocial-reports-send
+    runtime: node
+    schedule: "0 8 * * *"
+    buildCommand: "true"
+    startCommand: >-
+      curl -fsS -X GET
+      -H "Authorization: Bearer $CRON_SECRET"
+      "$CRON_BASE_URL/api/reports/send"
+    envVars:
+      - fromGroup: resocial-cron
+      - key: CRON_BASE_URL
+        fromService:
+          name: resocial
+          type: web
+          envVarKey: NEXT_PUBLIC_APP_URL
