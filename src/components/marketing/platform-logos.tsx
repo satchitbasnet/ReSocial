@@ -10,10 +10,10 @@ export function PlatformLogos() {
           className="flex flex-col items-center gap-2 group"
           title={platform.name}
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl glass-card group-hover:scale-110 transition-all duration-200">
+          <div className="flex h-14 w-14 items-center justify-center frame-card group-hover:scale-105 transition-transform duration-200">
             <PlatformIcon platform={platform.id} size={28} />
           </div>
-          <span className="text-xs text-gray-500 font-medium">{platform.name}</span>
+          <span className="hud-label">{platform.name}</span>
         </div>
       ))}
     </div>

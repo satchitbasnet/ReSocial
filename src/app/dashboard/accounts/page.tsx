@@ -26,6 +26,7 @@ const OAUTH_PLATFORMS = new Set([
   "youtube",
   "instagram",
   "facebook",
+  "twitter",
 ]);
 
 function AccountsContent() {
@@ -81,6 +82,8 @@ function AccountsContent() {
           "Instagram is not configured. Add INSTAGRAM_CLIENT_ID and INSTAGRAM_CLIENT_SECRET.",
         facebook_config:
           "Facebook is not configured. Add FACEBOOK_CLIENT_ID and FACEBOOK_CLIENT_SECRET.",
+        twitter_config:
+          "X is not configured. Add TWITTER_CLIENT_ID and TWITTER_CLIENT_SECRET.",
         tiktok_oauth_failed: "TikTok authorization failed. Please try again.",
         youtube_oauth_failed: "YouTube authorization failed. Please try again.",
         instagram_oauth_failed:
@@ -89,6 +92,7 @@ function AccountsContent() {
         facebook_oauth_failed: "Facebook authorization failed. Please try again.",
         facebook_no_pages:
           "No Facebook Pages found. Create a Page and try again.",
+        twitter_oauth_failed: "X authorization failed. Please try again.",
         invalid_state: "Invalid OAuth state. Please try connecting again.",
         plan_limit_platforms:
           "Platform limit reached for your plan. Upgrade to connect more.",
@@ -159,8 +163,8 @@ function AccountsContent() {
           We never ask for your social media passwords
         </p>
         <p>
-          TikTok, YouTube, Instagram, and Facebook use official OAuth APIs. When
-          you tap Connect, you are redirected to that platform&apos;s secure
+          TikTok, YouTube, Instagram, Facebook, and X use official OAuth APIs.
+          When you tap Connect, you are redirected to that platform&apos;s secure
           login screen to click Allow. ReSocial receives a token to publish on
           your behalf — not your password. You can revoke access anytime from
           the platform&apos;s app settings.

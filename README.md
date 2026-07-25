@@ -1,22 +1,29 @@
 # ReSocial
 
-**Post Once, Reach Everywhere.** ReSocial is an automated content distribution platform — upload your videos once and distribute them to TikTok, YouTube, Instagram, Facebook, X, Pinterest, and Snapchat.
+**Post Once, Reach Everywhere.** ReSocial is an automated content distribution platform — upload once and publish to TikTok, YouTube, Instagram, Facebook, X, and more.
 
 ## Features
 
 - **Marketing site** — Landing pages for creators, businesses, and agencies with pricing
-- **User authentication** — Sign up, login, 14-day free trial (10 videos)
+- **User authentication** — Sign up, login, 14-day free trial
 - **Multi-platform upload** — Upload video/image and publish to multiple platforms at once
-- **Connected accounts** — Connect social media accounts per platform
-- **Post history** — Track distribution status across all platforms
-- **Subscription tiers** — Starter, Pro, and Agency plans
+- **Real OAuth publishing** — TikTok, YouTube, Instagram, Facebook, and X (Twitter)
+- **Scheduling** — Cron-driven scheduled publishing (every 5 minutes on Render)
+- **Inbox sync** — Hourly comment sync for connected accounts
+- **Repurpose workflows** — Poll sources every 15 minutes for new content to redistribute
+- **Stripe billing** — Starter, Pro, and Agency plans with usage metering
+- **Cloudflare R2** — Media storage (with Vercel Blob as an alternative)
+- **AI captions** — Optional OpenAI caption suggestions on upload (falls back to templates)
 
 ## Tech Stack
 
-- **Next.js 15** (App Router, Server Actions)
+- **Next.js 15** (App Router)
 - **TypeScript** + **Tailwind CSS 4**
 - **PostgreSQL** (Supabase) + **Drizzle ORM**
 - **JWT auth** with httpOnly cookies
+- **Stripe** for subscriptions
+- **Cloudflare R2** / Vercel Blob for media
+- **Resend** for scheduled email reports
 
 ## Getting Started
 
@@ -42,8 +49,11 @@ Required variables:
 | `DIRECT_DATABASE_URL` | Supabase **direct** URI (port 5432) — for `npm run db:push` only |
 | `AUTH_SECRET` | Random 32+ character secret for JWT signing |
 | `NEXT_PUBLIC_APP_URL` | App URL (e.g. `http://localhost:3000`) |
+| `CRON_SECRET` | Bearer token for `/api/cron/*` and report cron routes |
 
-Generate an auth secret:
+Platform OAuth, Stripe, R2, and optional `OPENAI_API_KEY` are documented in `.env.example`.
+
+Generate secrets:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
@@ -88,37 +98,50 @@ src/
 │   ├── pricing/              # Pricing page
 │   ├── login/ & signup/      # Auth pages
 │   ├── dashboard/            # App dashboard
-│   └── api/                  # API routes
+│   └── api/                  # API routes (OAuth, cron, Stripe, upload, …)
 ├── components/
 │   ├── layout/               # Navbar, footer
 │   ├── marketing/            # Landing page sections
-│   ├── dashboard/            # Dashboard sidebar
+│   ├── dashboard/            # Dashboard UI
 │   └── ui/                   # Shared UI components
 └── lib/
     ├── db/                   # Drizzle schema & client
     ├── auth.ts               # Session management
     ├── constants.ts          # Platforms, plans, features
-    └── platforms/            # Platform publisher logic
+    ├── platforms/            # Real + simulated platform publishers
+    ├── ai/                   # Caption generation
+    └── repurpose/            # Source polling workflows
 ```
 
 ## Deployment (Render)
 
-1. Create a Neon PostgreSQL database
-2. Set environment variables on Render
-3. Build command: `npm run build`
-4. Start command: `npm start`
-5. Run `npm run db:push` once to create tables
+`render.yaml` defines:
 
-> **Note:** Render's filesystem is ephemeral. For production, replace local file uploads with cloud storage (S3, Vercel Blob, etc.).
+- **Web service** `resocial` (binds `0.0.0.0:$PORT` via `npm start`)
+- **Cron jobs** that `curl` the app with `Authorization: Bearer $CRON_SECRET`:
+  - `*/5 * * * *` → `/api/cron/publish-scheduled`
+  - `*/15 * * * *` → `/api/cron/repurpose-sources`
+  - hourly → `/api/cron/inbox-sync`
+  - daily 06:00 UTC → `/api/cron/usage-reset`
+  - daily 08:00 UTC → `/api/reports/send`
+
+Shared `CRON_SECRET` lives in the `resocial-cron` env group. Set `NEXT_PUBLIC_APP_URL` on the web service to your public Render URL so cron jobs can reach it.
+
+> **Note:** Render's filesystem is ephemeral. Use Cloudflare R2 (or Vercel Blob) for media — do not rely on local `/uploads`.
 
 ## Platform Integrations
 
-The MVP includes a publisher abstraction layer. Each platform currently simulates publishing for demo purposes. To enable real OAuth publishing:
+| Platform | Status |
+|----------|--------|
+| TikTok | Real OAuth + Content Posting API |
+| YouTube | Real OAuth + upload |
+| Instagram | Real OAuth + publish |
+| Facebook | Real OAuth (Pages) + publish |
+| X (Twitter) | Real OAuth 2.0 PKCE + media upload + tweets |
+| Pinterest | Simulated (demo connect) |
+| Snapchat | Simulated (demo connect) |
 
-1. Register apps with each platform's developer portal
-2. Add OAuth client IDs/secrets to `.env.local`
-3. Implement OAuth callback routes
-4. Replace simulated `publishToPlatform()` with real API calls
+To enable a real integration: register the app in the platform developer portal, set redirect URI to `{NEXT_PUBLIC_APP_URL}/api/auth/callback/{platform}`, and add client credentials from `.env.example`.
 
 ## License
 
