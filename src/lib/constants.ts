@@ -4,8 +4,6 @@ export const PLATFORMS = [
   { id: "instagram", name: "Instagram", color: "#E4405F" },
   { id: "facebook", name: "Facebook", color: "#1877F2" },
   { id: "twitter", name: "X (Twitter)", color: "#000000" },
-  { id: "pinterest", name: "Pinterest", color: "#BD081C" },
-  { id: "snapchat", name: "Snapchat", color: "#FFFC00" },
 ] as const;
 
 export type PlatformId = (typeof PLATFORMS)[number]["id"];
@@ -16,8 +14,6 @@ export const PLATFORM_CAPTION_LIMITS: Record<PlatformId, number> = {
   instagram: 2200,
   facebook: 63206,
   twitter: 280,
-  pinterest: 500,
-  snapchat: 250,
 };
 
 export const PLANS = {
@@ -133,7 +129,7 @@ export const FAQ = [
   },
   {
     q: "Which platforms do you support?",
-    a: "We support TikTok, YouTube, Instagram, Facebook, X (Twitter), Pinterest, and Snapchat — with more platforms coming soon.",
+    a: "We support TikTok, YouTube, Instagram, Facebook, and X (Twitter) — with more platforms coming soon.",
   },
   {
     q: "Can I connect multiple accounts per platform?",

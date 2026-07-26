@@ -34,18 +34,6 @@ export const PLATFORM_CALENDAR_COLORS: Record<
     text: "text-gray-800",
     dot: "bg-gray-800",
   },
-  pinterest: {
-    bg: "bg-rose-50",
-    border: "border-rose-600",
-    text: "text-rose-700",
-    dot: "bg-rose-600",
-  },
-  snapchat: {
-    bg: "bg-yellow-50",
-    border: "border-yellow-400",
-    text: "text-yellow-800",
-    dot: "bg-yellow-400",
-  },
 };
 
 export function getPlatformCalendarColor(platform: string) {

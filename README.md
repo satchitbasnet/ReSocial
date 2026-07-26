@@ -11,7 +11,6 @@
 | **Instagram** | Real OAuth (Instagram Login) + Reels / photos / carousels |
 | **Facebook** | Real OAuth + Page posts / photos / video |
 | **X (Twitter)** | OAuth + publish code present; **on hold** until you add paid API credentials |
-| **Pinterest / Snapchat** | Simulated publish only |
 | **Stripe** | Checkout + portal for Starter / Pro / Agency |
 | **Media storage** | Cloudflare R2 (preferred) or Vercel Blob fallback |
 | **Scheduling** | Cron-driven (`publish-scheduled`); frequent runs via GitHub Actions on Vercel Hobby |

@@ -304,8 +304,6 @@ export function getOAuthUrl(platform: PlatformId): string {
     instagram: "https://api.instagram.com/oauth/authorize",
     facebook: "https://www.facebook.com/v18.0/dialog/oauth",
     twitter: `${getAppUrl()}/api/connect/twitter`,
-    pinterest: "https://www.pinterest.com/oauth",
-    snapchat: "https://accounts.snapchat.com/login/oauth2/authorize",
   };
 
   const clientIds: Partial<Record<PlatformId, string>> = {

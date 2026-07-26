@@ -32,8 +32,6 @@ const PLATFORM_DIMENSIONS: Record<PlatformId, { width: number; height: number }>
     youtube: { width: 1920, height: 1080 },
     facebook: { width: 1080, height: 1080 },
     twitter: { width: 1920, height: 1080 },
-    pinterest: { width: 1080, height: 1920 },
-    snapchat: { width: 1080, height: 1920 },
   };
 
 /** Known watermark positions when repurposing from each platform. */
@@ -42,7 +40,6 @@ const WATERMARK_LAYOUTS: Partial<Record<PlatformId, WatermarkLayout>> = {
   instagram: { corner: "bottom-right", widthRatio: 0.28, heightRatio: 0.1 },
   facebook: { corner: "bottom-right", widthRatio: 0.22, heightRatio: 0.08 },
   youtube: { corner: "bottom-right", widthRatio: 0.22, heightRatio: 0.08 },
-  snapchat: { corner: "bottom-left", widthRatio: 0.25, heightRatio: 0.1 },
 };
 
 function isVideoMedia(inputUrl: string, mediaType?: string): boolean {
