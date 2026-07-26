@@ -144,13 +144,8 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
                 </ul>
 
                 <Button
-                  variant={isPopular ? "primary" : "outline"}
-                  className={cn(
-                    "w-full !rounded-sm",
-                    isPopular
-                      ? "!bg-tally hover:!bg-tally/90 !text-paper !shadow-none !border-0"
-                      : "!border-ink/20 !text-ink hover:!bg-ink/5 !border"
-                  )}
+                  variant={isPopular ? "accent" : "outline"}
+                  className="w-full"
                   onClick={() => handleCheckout(key)}
                   disabled={loadingPlan === key}
                 >

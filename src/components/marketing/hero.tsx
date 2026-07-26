@@ -74,11 +74,7 @@ export function Hero({
           </p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <Button
-              size="lg"
-              href={signupHref}
-              className="!bg-tally hover:!bg-tally/90 !text-paper !rounded-sm !shadow-none"
-            >
+            <Button size="lg" href={signupHref} variant="accent">
               {cta}
               <ArrowRight size={18} className="ml-2" />
             </Button>

@@ -23,11 +23,7 @@ export function CTASection({ signupHref = "/signup" }: { signupHref?: string }) 
               Publish 10 Videos for FREE When You Start Your 14-Day Trial.
               No Obligation. No Credit Card Required.
             </p>
-            <Button
-              href={signupHref}
-              size="lg"
-              className="!bg-tally hover:!bg-tally/90 !text-paper !rounded-sm !shadow-none"
-            >
+            <Button href={signupHref} size="lg" variant="accent">
               Start Your 14-Day Free Trial
               <ArrowRight size={18} className="ml-2" />
             </Button>

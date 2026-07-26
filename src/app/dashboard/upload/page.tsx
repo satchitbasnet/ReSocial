@@ -674,6 +674,7 @@ export default function UploadPage() {
         disabled={uploading || publishing || files.length === 0 || !title}
         className="w-full md:w-auto"
         size="lg"
+        variant="accent"
       >
         {(uploading || publishing) && (
           <Loader2 size={18} className="mr-2 animate-spin" />

@@ -10,7 +10,8 @@ const iconSizes = {
 
 interface LogoProps {
   size?: keyof typeof iconSizes;
-  variant?: "default" | "light";
+  /** `light` / `dark` = wordmark on dark surfaces (ink sidebar, heroes). */
+  variant?: "default" | "light" | "dark";
   showWordmark?: boolean;
   href?: string | null;
   className?: string;
@@ -26,6 +27,7 @@ export function Logo({
   const px = iconSizes[size];
   const textSize =
     size === "sm" ? "text-base" : size === "lg" ? "text-2xl" : "text-xl";
+  const onDark = variant === "light" || variant === "dark";
 
   const content = (
     <span className={cn("inline-flex items-center gap-2", className)}>
@@ -40,11 +42,7 @@ export function Logo({
       {showWordmark && (
         <span className={cn("font-display font-bold leading-none tracking-tight", textSize)}>
           <span className="gradient-text-re">Re</span>
-          <span
-            className={variant === "light" ? "text-white" : "text-gray-900"}
-          >
-            Social
-          </span>
+          <span className={onDark ? "text-paper" : "text-ink"}>Social</span>
         </span>
       )}
     </span>

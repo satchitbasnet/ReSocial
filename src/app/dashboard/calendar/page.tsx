@@ -34,8 +34,14 @@ import {
   PostDetailModal,
   type CalendarPost,
 } from "@/components/calendar/post-detail-modal";
+import {
+  HOLIDAY_COUNTRIES,
+  type PublicHoliday,
+  type HolidayCountry,
+} from "@/lib/holidays";
 
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const COUNTRY_STORAGE_KEY = "resocial_calendar_country";
 
 function postCardStatus(post: CalendarPost) {
   if (post.status === "scheduled") return "scheduled";
@@ -70,6 +76,11 @@ export default function CalendarPage() {
   const [selectedPost, setSelectedPost] = useState<CalendarPost | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<string | null>(null);
+  const [countryCode, setCountryCode] = useState<string>("US");
+  const [geoReady, setGeoReady] = useState(false);
+  const [holidays, setHolidays] = useState<PublicHoliday[]>([]);
+  const [holidayCountries, setHolidayCountries] =
+    useState<HolidayCountry[]>(HOLIDAY_COUNTRIES);
 
   const range = useMemo(() => {
     if (view === "week") {
@@ -85,6 +96,98 @@ export default function CalendarPage() {
     () => (view === "week" ? getWeekDays(anchor) : getMonthGridDays(anchor)),
     [anchor, view]
   );
+
+  const countryOptions = useMemo(() => {
+    const list = [...holidayCountries];
+    if (countryCode && !list.some((c) => c.code === countryCode)) {
+      list.unshift({ code: countryCode, name: countryCode });
+    }
+    return list;
+  }, [holidayCountries, countryCode]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadCountry() {
+      try {
+        const [geoRes, countriesRes] = await Promise.all([
+          fetch("/api/geo"),
+          fetch("/api/holidays/countries"),
+        ]);
+        const geo = await geoRes.json();
+        const countriesData = await countriesRes.json();
+
+        if (!cancelled && Array.isArray(countriesData.countries)) {
+          setHolidayCountries(countriesData.countries);
+        }
+
+        const stored = localStorage.getItem(COUNTRY_STORAGE_KEY);
+        if (stored && /^[A-Z]{2}$/i.test(stored)) {
+          if (!cancelled) {
+            setCountryCode(stored.toUpperCase());
+            setGeoReady(true);
+          }
+          return;
+        }
+
+        if (!cancelled && geo.countryCode) {
+          setCountryCode(String(geo.countryCode).toUpperCase());
+        }
+      } catch {
+        /* keep defaults */
+      } finally {
+        if (!cancelled) setGeoReady(true);
+      }
+    }
+
+    loadCountry();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!geoReady || !countryCode) return;
+
+    const years = new Set<number>([
+      range.start.getFullYear(),
+      range.end.getFullYear(),
+    ]);
+
+    let cancelled = false;
+
+    async function loadHolidays() {
+      try {
+        const results = await Promise.all(
+          [...years].map(async (year) => {
+            const res = await fetch(
+              `/api/holidays?year=${year}&country=${encodeURIComponent(countryCode)}`
+            );
+            const data = await res.json();
+            return (data.holidays ?? []) as PublicHoliday[];
+          })
+        );
+        if (!cancelled) setHolidays(results.flat());
+      } catch {
+        if (!cancelled) setHolidays([]);
+      }
+    }
+
+    loadHolidays();
+    return () => {
+      cancelled = true;
+    };
+  }, [geoReady, countryCode, range.start, range.end]);
+
+  const holidaysByDay = useMemo(() => {
+    const map = new Map<string, PublicHoliday[]>();
+    for (const holiday of holidays) {
+      const existing = map.get(holiday.date) ?? [];
+      existing.push(holiday);
+      map.set(holiday.date, existing);
+    }
+    return map;
+  }, [holidays]);
 
   const fetchPosts = useCallback(async () => {
     setLoading(true);
@@ -129,6 +232,12 @@ export default function CalendarPage() {
     setAnchor((d) =>
       view === "week" ? addDays(d, 7) : new Date(d.getFullYear(), d.getMonth() + 1, 1)
     );
+  }
+
+  function handleCountryChange(code: string) {
+    const normalized = code.toUpperCase();
+    setCountryCode(normalized);
+    localStorage.setItem(COUNTRY_STORAGE_KEY, normalized);
   }
 
   async function reschedulePost(post: CalendarPost, targetDay: Date) {
@@ -261,6 +370,20 @@ export default function CalendarPage() {
               </button>
             </div>
 
+            <select
+              value={countryCode}
+              onChange={(e) => handleCountryChange(e.target.value)}
+              className="px-3 py-2 text-sm rounded-xl border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+              aria-label="Holiday country"
+              title="Public holidays country"
+            >
+              {countryOptions.map((c) => (
+                <option key={c.code} value={c.code}>
+                  Holidays: {c.name}
+                </option>
+              ))}
+            </select>
+
             <div className="relative">
               <Filter size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <select
@@ -299,9 +422,16 @@ export default function CalendarPage() {
           {days.map((day) => {
             const dayKey = toDateKey(day);
             const dayPosts = postsByDay.get(dayKey) ?? [];
+            const dayHolidays = holidaysByDay.get(dayKey) ?? [];
             const inCurrentMonth = day.getMonth() === anchor.getMonth();
             const isToday = isSameDay(day, today);
             const isDropTarget = dropTarget === dayKey;
+            const holidayLabel = dayHolidays[0]
+              ? dayHolidays.length > 1
+                ? `${dayHolidays[0].localName} +${dayHolidays.length - 1}`
+                : dayHolidays[0].localName
+              : null;
+            const holidayTitle = dayHolidays.map((h) => h.name).join(", ");
 
             return (
               <div
@@ -309,6 +439,7 @@ export default function CalendarPage() {
                 className={cn(
                   "border-r border-b border-gray-100 p-1.5 sm:p-2 transition-colors",
                   view === "month" && !inCurrentMonth && "bg-gray-50/60",
+                  dayHolidays.length > 0 && inCurrentMonth && "bg-tally/[0.04]",
                   isDropTarget && "bg-brand-50 ring-2 ring-inset ring-brand-300"
                 )}
                 onDragOver={(e) => {
@@ -341,9 +472,19 @@ export default function CalendarPage() {
                   </Link>
                 </div>
 
+                {holidayLabel && (
+                  <p
+                    className="mb-1 text-[10px] font-medium text-tally truncate leading-tight"
+                    title={holidayTitle}
+                  >
+                    {holidayLabel}
+                  </p>
+                )}
+
                 <div className="space-y-1">
                   {dayPosts.map((post) => {
-                    const primaryPlatform = post.distributions[0]?.platform ?? "tiktok";
+                    const primaryPlatform =
+                      post.distributions[0]?.platform ?? "tiktok";
                     const colors = getPlatformCalendarColor(primaryPlatform);
                     const status = postCardStatus(post);
                     const draggable = ["scheduled", "draft"].includes(post.status);
@@ -381,12 +522,20 @@ export default function CalendarPage() {
                             />
                           )}
                           <div className="min-w-0 flex-1">
-                            <p className={cn("text-[11px] font-semibold truncate", colors.text)}>
+                            <p
+                              className={cn(
+                                "text-[11px] font-semibold truncate",
+                                colors.text
+                              )}
+                            >
                               {post.title}
                             </p>
                             <div className="flex items-center gap-1 mt-0.5">
                               <span
-                                className={cn("h-1.5 w-1.5 rounded-full", statusDotClass(status))}
+                                className={cn(
+                                  "h-1.5 w-1.5 rounded-full",
+                                  statusDotClass(status)
+                                )}
                               />
                               <div className="flex -space-x-1">
                                 {post.distributions.slice(0, 3).map((d) => (
@@ -420,6 +569,9 @@ export default function CalendarPage() {
         </span>
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-red-500" /> Failed
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-tally" /> Holiday
         </span>
         <span className="text-gray-400">Drag scheduled posts to reschedule</span>
       </div>
