@@ -136,19 +136,30 @@ function SignupForm() {
 
   const selectedType = ACCOUNT_TYPES.find((t) => t.id === accountType);
 
+  const inputClass =
+    "w-full px-4 py-2.5 rounded-md border border-ink/15 bg-paper text-ink placeholder:text-ink/35 focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink/30";
+
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
-        <div className="text-white max-w-md">
-          <Logo size="lg" variant="light" href={null} className="mb-8" />
-          <h2 className="font-display text-3xl font-bold mb-4">Start Your Free Trial</h2>
-          <p className="text-white/80 text-lg mb-8">
-            Join thousands distributing content across every major social platform.
+      <div className="hidden lg:flex lg:w-1/2 bg-ink text-paper items-center justify-center p-12 relative overflow-hidden">
+        <span className="pointer-events-none absolute top-6 left-6 hud-label text-[10px] text-paper/40 flex items-center gap-1.5">
+          <span className="tally-dot" style={{ width: 6, height: 6 }} />
+          Call Sheet
+        </span>
+        <div className="max-w-md relative">
+          <Logo size="lg" variant="dark" href={null} className="mb-8" />
+          <p className="hud-label text-xs text-tally mb-3">Free Trial</p>
+          <h2 className="font-display text-3xl font-semibold mb-4 leading-tight">
+            Start your free trial
+          </h2>
+          <p className="text-paper/65 text-lg mb-8 leading-relaxed">
+            Distribute to TikTok, YouTube, Instagram, Facebook, and X from one
+            dashboard.
           </p>
           <ul className="space-y-3">
             {perks.map((perk) => (
-              <li key={perk} className="flex items-center gap-3 text-white/90">
-                <Check size={18} className="text-green-300" />
+              <li key={perk} className="flex items-center gap-3 text-paper/85">
+                <Check size={18} className="text-tally shrink-0" />
                 {perk}
               </li>
             ))}
@@ -157,20 +168,23 @@ function SignupForm() {
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="glass-panel w-full max-w-lg p-8">
+        <div className="w-full max-w-lg border border-ink/10 bg-paper rounded-md p-8">
           <div className="lg:hidden mb-8">
             <Logo />
           </div>
 
           {step === 1 ? (
             <>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              <h1 className="font-display text-2xl font-semibold text-ink mb-2">
                 How Will You Use ReSocial?
               </h1>
-              <p className="text-gray-600 mb-8">
+              <p className="text-ink/60 mb-8">
                 We&apos;ll tailor your experience and pricing recommendations.
                 Already have an account?{" "}
-                <Link href="/login" className="text-brand-600 font-medium hover:underline">
+                <Link
+                  href="/login"
+                  className="text-tally font-medium hover:underline"
+                >
                   Log In
                 </Link>
               </p>
@@ -183,15 +197,17 @@ function SignupForm() {
                       key={type.id}
                       type="button"
                       onClick={() => selectType(type.id)}
-                      className="w-full text-left glass-card glass-card-interactive p-5 flex gap-4 items-start"
+                      className="w-full text-left border border-ink/10 bg-paper rounded-md p-5 flex gap-4 items-start transition-colors hover:border-ink/25"
                     >
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-                        <Icon size={22} />
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-ink/15 text-tally">
+                        <Icon size={22} strokeWidth={1.75} />
                       </div>
                       <div>
-                        <p className="font-semibold text-gray-900">{type.label}</p>
-                        <p className="text-sm text-gray-600 mt-1">{type.description}</p>
-                        <p className="text-xs text-brand-600 mt-2 font-medium">
+                        <p className="font-semibold text-ink">{type.label}</p>
+                        <p className="text-sm text-ink/60 mt-1">
+                          {type.description}
+                        </p>
+                        <p className="text-xs text-tally mt-2 font-medium">
                           {accountTypePricingHint(type.id)}
                         </p>
                       </div>
@@ -205,21 +221,21 @@ function SignupForm() {
               <button
                 type="button"
                 onClick={goBack}
-                className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 mb-4"
+                className="inline-flex items-center gap-1.5 text-sm text-ink/50 hover:text-ink mb-4"
               >
                 <ArrowLeft size={16} />
                 Change Account Type
               </button>
 
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              <h1 className="font-display text-2xl font-semibold text-ink mb-1">
                 Create Your {selectedType?.label} Account
               </h1>
-              <p className="text-sm text-brand-600 font-medium mb-6">
+              <p className="text-sm text-tally font-medium mb-6">
                 {selectedType && accountTypePricingHint(selectedType.id)}
               </p>
 
               {referralCode && (
-                <div className="mb-6 bg-brand-50 text-brand-800 text-sm p-3 rounded-xl border border-brand-100">
+                <div className="mb-6 bg-ink/[0.04] text-ink text-sm p-3 rounded-md border border-ink/10">
                   Referred by code{" "}
                   <span className="font-mono font-medium">{referralCode}</span>
                 </div>
@@ -227,7 +243,7 @@ function SignupForm() {
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
-                  <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg border border-red-100">
+                  <div className="bg-tally/10 text-tally text-sm p-3 rounded-md border border-tally/25">
                     {error}
                   </div>
                 )}
@@ -235,29 +251,29 @@ function SignupForm() {
                 {isCreator && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        First Name <span className="text-red-500">*</span>
+                      <label className="block text-sm font-medium text-ink mb-1.5">
+                        First Name <span className="text-tally">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
-                        className="glass-input"
+                        className={inputClass}
                         placeholder="Jane"
                         autoComplete="given-name"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Last Name <span className="text-red-500">*</span>
+                      <label className="block text-sm font-medium text-ink mb-1.5">
+                        Last Name <span className="text-tally">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
-                        className="glass-input"
+                        className={inputClass}
                         placeholder="Doe"
                         autoComplete="family-name"
                       />
@@ -268,15 +284,15 @@ function SignupForm() {
                 {isBusiness && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                        {orgLabel} <span className="text-red-500">*</span>
+                      <label className="block text-sm font-medium text-ink mb-1.5">
+                        {orgLabel} <span className="text-tally">*</span>
                       </label>
                       <input
                         type="text"
                         required
                         value={organizationName}
                         onChange={(e) => setOrganizationName(e.target.value)}
-                        className="glass-input"
+                        className={inputClass}
                         placeholder={
                           accountType === "agency"
                             ? "Bright Social Agency"
@@ -284,34 +300,36 @@ function SignupForm() {
                         }
                         autoComplete="organization"
                       />
-                      <p className="text-xs text-gray-500 mt-1.5">
+                      <p className="text-xs text-ink/45 mt-1.5">
                         This name appears on your dashboard and billing.
                       </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          First Name <span className="text-gray-400">(Optional)</span>
+                        <label className="block text-sm font-medium text-ink mb-1.5">
+                          First Name{" "}
+                          <span className="text-ink/40">(Optional)</span>
                         </label>
                         <input
                           type="text"
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
-                          className="glass-input"
+                          className={inputClass}
                           placeholder="Jane"
                           autoComplete="given-name"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                          Last Name <span className="text-gray-400">(Optional)</span>
+                        <label className="block text-sm font-medium text-ink mb-1.5">
+                          Last Name{" "}
+                          <span className="text-ink/40">(Optional)</span>
                         </label>
                         <input
                           type="text"
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
-                          className="glass-input"
+                          className={inputClass}
                           placeholder="Doe"
                           autoComplete="family-name"
                         />
@@ -321,23 +339,23 @@ function SignupForm() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Email <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-ink mb-1.5">
+                    Email <span className="text-tally">*</span>
                   </label>
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="glass-input"
+                    className={inputClass}
                     placeholder="you@example.com"
                     autoComplete="email"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Password <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-ink mb-1.5">
+                    Password <span className="text-tally">*</span>
                   </label>
                   <input
                     type="password"
@@ -345,18 +363,19 @@ function SignupForm() {
                     minLength={8}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="glass-input"
+                    className={inputClass}
                     placeholder="Min. 8 characters"
                     autoComplete="new-password"
                   />
                 </div>
 
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" variant="accent" className="w-full" disabled={loading}>
                   {loading ? "Creating Account..." : "Start 14-Day Free Trial"}
                 </Button>
 
-                <p className="text-xs text-gray-500 text-center">
-                  By signing up, you agree to our Terms of Service and Privacy Policy.
+                <p className="text-xs text-ink/45 text-center">
+                  By signing up, you agree to our Terms of Service and Privacy
+                  Policy.
                 </p>
               </form>
             </>

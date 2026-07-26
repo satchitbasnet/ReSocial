@@ -32,7 +32,11 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
       }
       if (data.url) {
         window.location.href = data.url;
+        return;
       }
+      alert(data.error || "Checkout failed. Check Stripe configuration.");
+    } catch {
+      alert("Checkout failed. Please try again.");
     } finally {
       setLoadingPlan(null);
     }

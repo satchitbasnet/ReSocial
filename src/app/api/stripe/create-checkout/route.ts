@@ -49,8 +49,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ url: checkoutSession.url });
   } catch (error) {
     console.error("Stripe checkout error:", error);
+    const message =
+      error instanceof Error ? error.message : "Failed to create checkout session";
+    const isConfig =
+      message.includes("must be set") || message.includes("STRIPE_");
     return NextResponse.json(
-      { error: "Failed to create checkout session" },
+      {
+        error: isConfig
+          ? "Stripe is not configured. Add STRIPE_SECRET_KEY and plan price IDs to your environment."
+          : "Failed to create checkout session",
+      },
       { status: 500 }
     );
   }

@@ -38,40 +38,58 @@ export default function LoginPage() {
     }
   }
 
+  const inputClass =
+    "w-full px-4 py-2.5 rounded-md border border-ink/15 bg-paper text-ink placeholder:text-ink/35 focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink/30";
+
   return (
     <div className="min-h-screen flex">
-      <div className="hidden lg:flex lg:w-1/2 gradient-bg items-center justify-center p-12">
-        <div className="text-white max-w-md">
-          <Logo size="lg" variant="light" href={null} className="mb-8" />
-          <h2 className="font-display text-3xl font-bold mb-4">Welcome Back</h2>
-          <p className="text-white/80 text-lg">
-            Post Once, Reach Everywhere. Manage Your Content Distribution From
-            One Powerful Dashboard.
+      <div className="hidden lg:flex lg:w-1/2 bg-ink text-paper items-center justify-center p-12 relative overflow-hidden">
+        <span className="pointer-events-none absolute top-6 left-6 hud-label text-[10px] text-paper/40 flex items-center gap-1.5">
+          <span className="tally-dot" style={{ width: 6, height: 6 }} />
+          Session
+        </span>
+        <div className="max-w-md relative">
+          <Logo size="lg" variant="dark" href={null} className="mb-8" />
+          <p className="hud-label text-xs text-tally mb-3">Welcome Back</p>
+          <h2 className="font-display text-3xl font-semibold mb-4 leading-tight">
+            Pick up where you left off
+          </h2>
+          <p className="text-paper/65 text-lg leading-relaxed">
+            Post once, reach everywhere. Manage distribution from one dashboard —
+            TikTok, YouTube, Instagram, Facebook, and X.
           </p>
         </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8">
-        <div className="glass-panel w-full max-w-md p-8">
-          <Logo className="mb-8" />
+        <div className="w-full max-w-md border border-ink/10 bg-paper rounded-md p-8">
+          <div className="lg:hidden mb-8">
+            <Logo />
+          </div>
+          <Logo className="hidden lg:flex mb-8" />
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Log In</h1>
-          <p className="text-gray-600 mb-8">
+          <h1 className="font-display text-2xl font-semibold text-ink mb-2">
+            Log In
+          </h1>
+          <p className="text-ink/60 mb-8">
             Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-brand-600 font-medium hover:underline">
+            <Link
+              href="/signup"
+              className="text-tally font-medium hover:underline"
+            >
               Start Free Trial
             </Link>
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="bg-red-50 text-red-700 text-sm p-3 rounded-lg border border-red-100">
+              <div className="bg-tally/10 text-tally text-sm p-3 rounded-md border border-tally/25">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-ink mb-1.5">
                 Email
               </label>
               <input
@@ -79,13 +97,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="glass-input"
+                className={inputClass}
                 placeholder="you@example.com"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-ink mb-1.5">
                 Password
               </label>
               <input
@@ -93,7 +111,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="glass-input"
+                className={inputClass}
                 placeholder="••••••••"
               />
             </div>
