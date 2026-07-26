@@ -40,41 +40,48 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
 
   return (
     <section className="py-24" id="pricing">
-      <div className="mx-auto max-w-7xl px-6">
-        <div className="text-center mb-12">
-          <h2 className="font-display text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+      <div className="mx-auto max-w-6xl px-6">
+        <div className="mb-12 max-w-xl">
+          <p className="hud-label text-xs text-tally mb-3">Rate Card</p>
+          <h2 className="font-display text-3xl md:text-4xl font-semibold text-ink mb-4">
             Simple Pricing to Grow Your Social Platforms
           </h2>
-          <p className="text-gray-600 text-lg mb-2">
+          <p className="text-ink/60 text-lg leading-relaxed mb-2">
             Publish 10 Videos for FREE — No Credit Card Required
           </p>
 
           {showToggle && (
-            <div className="inline-flex items-center gap-3 mt-6 glass rounded-full p-1">
+            <div className="inline-flex items-center gap-1 mt-6 border border-ink/15 p-1 rounded-sm">
               <button
+                type="button"
                 onClick={() => setYearly(false)}
                 className={cn(
-                  "px-5 py-2 rounded-full text-sm font-medium transition-all",
-                  !yearly ? "glass-nav-item-active shadow-sm text-gray-900" : "text-gray-500"
+                  "hud-label px-4 py-2 text-[11px] transition-colors rounded-sm",
+                  !yearly
+                    ? "bg-ink text-paper"
+                    : "text-ink/50 hover:text-ink"
                 )}
               >
                 Monthly
               </button>
               <button
+                type="button"
                 onClick={() => setYearly(true)}
                 className={cn(
-                  "px-5 py-2 rounded-full text-sm font-medium transition-all",
-                  yearly ? "glass-nav-item-active shadow-sm text-gray-900" : "text-gray-500"
+                  "hud-label px-4 py-2 text-[11px] transition-colors rounded-sm",
+                  yearly
+                    ? "bg-ink text-paper"
+                    : "text-ink/50 hover:text-ink"
                 )}
               >
-                Yearly <span className="text-brand-600">(Save 17%)</span>
+                Yearly <span className="text-tally">(Save 17%)</span>
               </button>
             </div>
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {planKeys.map((key) => {
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-ink/10 border border-ink/10">
+          {planKeys.map((key, i) => {
             const plan = PLANS[key];
             const price = yearly ? plan.yearlyPrice : plan.price;
             const daily = yearly ? plan.yearlyDailyPrice : plan.dailyPrice;
@@ -84,56 +91,66 @@ export function PricingSection({ showToggle = true }: { showToggle?: boolean }) 
               <div
                 key={key}
                 className={cn(
-                  "relative glass-card glass-card-interactive p-8",
-                  isPopular
-                    ? "border-brand-400/40 shadow-xl shadow-brand-500/15 scale-105"
-                    : ""
+                  "relative frame-card p-8 pt-10",
+                  isPopular && "ring-1 ring-inset ring-tally"
                 )}
               >
-                {isPopular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-brand-600 text-white text-xs font-semibold px-4 py-1 rounded-full">
-                    Most Popular
-                  </div>
-                )}
+                <div className="flex items-center justify-between mb-6">
+                  <span className="hud-label text-[10px] text-ink/40">
+                    Tier {String(i + 1).padStart(2, "0")}
+                  </span>
+                  {isPopular && (
+                    <span className="hud-label text-[10px] text-tally">
+                      Most Popular
+                    </span>
+                  )}
+                </div>
 
-                <h3 className="font-display text-xl font-bold text-gray-900 mb-1">
+                <h3 className="font-display text-xl font-semibold text-ink mb-1">
                   {plan.name}
                 </h3>
                 <div className="mb-1">
-                  <span className="font-display text-4xl font-bold text-gray-900">
+                  <span className="font-display text-4xl font-semibold text-ink">
                     ${daily.toFixed(2)}
                   </span>
-                  <span className="text-gray-500 text-sm">/day</span>
+                  <span className="text-ink/50 text-sm">/day</span>
                 </div>
-                <p className="text-sm text-gray-500 mb-6">
+                <p className="text-sm text-ink/50 mb-6">
                   ${price} billed {yearly ? "yearly" : "monthly"}
                 </p>
-                <p className="text-gray-600 text-sm mb-6">{plan.description}</p>
+                <p className="text-ink/60 text-sm mb-6 leading-relaxed">
+                  {plan.description}
+                </p>
 
                 <ul className="space-y-3 mb-8">
-                  <li className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
+                  <li className="flex items-start gap-2 text-sm text-ink/80">
+                    <Check size={16} className="text-tally mt-0.5 shrink-0" />
                     Connect Up to {plan.accountsPerPlatform} Accounts per Platform
                   </li>
-                  <li className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
+                  <li className="flex items-start gap-2 text-sm text-ink/80">
+                    <Check size={16} className="text-tally mt-0.5 shrink-0" />
                     {plan.videosPerMonth === Infinity
                       ? "Unlimited Published Videos"
                       : `${plan.videosPerMonth.toLocaleString()} videos/month`}
                   </li>
-                  <li className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
+                  <li className="flex items-start gap-2 text-sm text-ink/80">
+                    <Check size={16} className="text-tally mt-0.5 shrink-0" />
                     Auto-Resize & Watermark Removal
                   </li>
-                  <li className="flex items-start gap-2 text-sm text-gray-700">
-                    <Check size={16} className="text-brand-600 mt-0.5 shrink-0" />
+                  <li className="flex items-start gap-2 text-sm text-ink/80">
+                    <Check size={16} className="text-tally mt-0.5 shrink-0" />
                     All Platform Integrations
                   </li>
                 </ul>
 
                 <Button
                   variant={isPopular ? "primary" : "outline"}
-                  className="w-full"
+                  className={cn(
+                    "w-full !rounded-sm",
+                    isPopular
+                      ? "!bg-tally hover:!bg-tally/90 !text-paper !shadow-none !border-0"
+                      : "!border-ink/20 !text-ink hover:!bg-ink/5 !border"
+                  )}
                   onClick={() => handleCheckout(key)}
                   disabled={loadingPlan === key}
                 >

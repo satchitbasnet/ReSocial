@@ -1,4 +1,4 @@
-import { eq, and, gte, desc, sql, inArray } from "drizzle-orm";
+import { eq, and, gte, lt, desc, sql, inArray } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   distributions,
@@ -276,7 +276,7 @@ async function computeSummaryForRange(
         ? and(
             eq(postMetrics.userId, userId),
             gte(postMetrics.syncedAt, since),
-            sql`${postMetrics.syncedAt} < ${until}`
+            lt(postMetrics.syncedAt, until)
           )
         : and(eq(postMetrics.userId, userId), gte(postMetrics.syncedAt, since))
     );
@@ -289,7 +289,7 @@ async function computeSummaryForRange(
         ? and(
             eq(platformDailyStats.userId, userId),
             gte(platformDailyStats.statDate, since),
-            sql`${platformDailyStats.statDate} < ${until}`
+            lt(platformDailyStats.statDate, until)
           )
         : and(
             eq(platformDailyStats.userId, userId),

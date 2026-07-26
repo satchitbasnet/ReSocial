@@ -8,9 +8,9 @@ import {
   fetchFacebookPages,
 } from "@/lib/platforms/facebook";
 import { upsertFacebookPageConnection, PENDING_FACEBOOK_TOKEN_COOKIE } from "@/lib/platforms/facebook-connect";
+import { oauthStateCookieOptions } from "@/lib/oauth-state";
 
 const STATE_COOKIE = "facebook_oauth_state";
-const COOKIE_TTL = 60 * 10;
 
 export async function GET(request: NextRequest) {
   const appUrl = getAppUrl();
@@ -50,26 +50,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(accountsUrl);
     }
 
-    const cookieOpts = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax" as const,
-      maxAge: COOKIE_TTL,
-      path: "/",
-    };
-
-    cookieStore.set(PENDING_FACEBOOK_TOKEN_COOKIE, tokens.accessToken, cookieOpts);
+    const cookieOpts = oauthStateCookieOptions();
 
     if (pages.length === 1) {
       const db = getDb();
       await upsertFacebookPageConnection(db, session.userId, pages[0]);
-      cookieStore.delete(PENDING_FACEBOOK_TOKEN_COOKIE);
       accountsUrl.searchParams.set("connected", "facebook");
-      return NextResponse.redirect(accountsUrl);
+      const response = NextResponse.redirect(accountsUrl);
+      response.cookies.delete(PENDING_FACEBOOK_TOKEN_COOKIE);
+      return response;
     }
 
     accountsUrl.searchParams.set("facebook_pick", "1");
-    return NextResponse.redirect(accountsUrl);
+    const response = NextResponse.redirect(accountsUrl);
+    response.cookies.set(
+      PENDING_FACEBOOK_TOKEN_COOKIE,
+      tokens.accessToken,
+      cookieOpts
+    );
+    return response;
   } catch (err) {
     console.error("Facebook OAuth callback error:", err);
     accountsUrl.searchParams.set("error", "facebook_oauth_failed");

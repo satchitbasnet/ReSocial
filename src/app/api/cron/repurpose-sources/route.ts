@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { pollRepurposeSources } from "@/lib/repurpose/source-poller";
+import { assertCronAuthorized } from "@/lib/cron-auth";
 
 /** Every 15 minutes — poll workflow sources for new content to repurpose. */
 export async function GET(request: Request) {
-  const secret = request.headers.get("authorization");
-  if (secret !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuthorized(request);
+  if (denied) return denied;
 
   try {
     const db = getDb();

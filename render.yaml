@@ -11,9 +11,107 @@ services:
         value: "22"
       - key: AUTH_SECRET
         generateValue: true
+      - key: CRON_SECRET
+        sync: false
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_DATABASE_URL
         sync: false
       - key: NEXT_PUBLIC_APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_URL
+        sync: false
+
+  # Cron jobs hit the public app URL (works when the web app is on Render
+  # or when APP_URL points at Vercel: https://re-social.vercel.app).
+  # Set CRON_SECRET + APP_URL (or NEXT_PUBLIC_URL) on each cron service.
+
+  - type: cron
+    name: resocial-publish-scheduled
+    runtime: node
+    plan: starter
+    schedule: "*/5 * * * *"
+    buildCommand: "true"
+    startCommand: |
+      curl -fsS -X GET \
+        -H "Authorization: Bearer ${CRON_SECRET}" \
+        "${APP_URL:-$NEXT_PUBLIC_URL}/api/cron/publish-scheduled"
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_URL
+        sync: false
+
+  - type: cron
+    name: resocial-inbox-sync
+    runtime: node
+    plan: starter
+    schedule: "0 * * * *"
+    buildCommand: "true"
+    startCommand: |
+      curl -fsS -X GET \
+        -H "Authorization: Bearer ${CRON_SECRET}" \
+        "${APP_URL:-$NEXT_PUBLIC_URL}/api/cron/inbox-sync"
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_URL
+        sync: false
+
+  - type: cron
+    name: resocial-repurpose-sources
+    runtime: node
+    plan: starter
+    schedule: "*/15 * * * *"
+    buildCommand: "true"
+    startCommand: |
+      curl -fsS -X GET \
+        -H "Authorization: Bearer ${CRON_SECRET}" \
+        "${APP_URL:-$NEXT_PUBLIC_URL}/api/cron/repurpose-sources"
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_URL
+        sync: false
+
+  - type: cron
+    name: resocial-usage-reset
+    runtime: node
+    plan: starter
+    schedule: "0 6 * * *"
+    buildCommand: "true"
+    startCommand: |
+      curl -fsS -X GET \
+        -H "Authorization: Bearer ${CRON_SECRET}" \
+        "${APP_URL:-$NEXT_PUBLIC_URL}/api/cron/usage-reset"
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_URL
+        sync: false
+
+  - type: cron
+    name: resocial-reports-send
+    runtime: node
+    plan: starter
+    schedule: "0 8 * * *"
+    buildCommand: "true"
+    startCommand: |
+      curl -fsS -X GET \
+        -H "Authorization: Bearer ${CRON_SECRET}" \
+        "${APP_URL:-$NEXT_PUBLIC_URL}/api/reports/send"
+    envVars:
+      - key: CRON_SECRET
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: NEXT_PUBLIC_URL
         sync: false

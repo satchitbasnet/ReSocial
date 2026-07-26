@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { connectedAccounts } from "@/lib/db/schema";
 import { syncInboxForUser } from "@/lib/inbox/sync";
+import { assertCronAuthorized } from "@/lib/cron-auth";
 
 /** Hourly — sync inbox comments for users with connected accounts. */
 export async function GET(request: Request) {
-  const secret = request.headers.get("authorization");
-  if (secret !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuthorized(request);
+  if (denied) return denied;
 
   const db = getDb();
   const rows = await db

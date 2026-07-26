@@ -14,10 +14,7 @@ export default function HomePage() {
     <>
       <Navbar />
       <main>
-        <Hero
-          title="The #1 Automated Content Repurposing Platform"
-          subtitle="Connect with all major social media platforms. Upload once and automatically post videos, stories, and audio across TikTok, YouTube, Instagram, Facebook, X, and more."
-        />
+        <Hero />
 
         <section className="py-16 border-y glass-divider">
           <div className="mx-auto max-w-7xl px-6 text-center">

@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { randomBytes } from "crypto";
 import { getSession } from "@/lib/auth";
 import { getAppUrl } from "@/lib/config";
 import { assertCanConnect } from "@/lib/connect-guard";
 import { buildInstagramAuthUrl } from "@/lib/platforms/instagram";
+import { oauthRedirect } from "@/lib/oauth-state";
 
 const STATE_COOKIE = "instagram_oauth_state";
-const STATE_TTL = 60 * 10;
 
 export async function GET() {
   const appUrl = getAppUrl();
@@ -21,16 +20,9 @@ export async function GET() {
     if (blocked) return blocked;
 
     const state = randomBytes(24).toString("hex");
-    const cookieStore = await cookies();
-    cookieStore.set(STATE_COOKIE, state, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: STATE_TTL,
-      path: "/",
-    });
-
-    return NextResponse.redirect(buildInstagramAuthUrl(state));
+    return oauthRedirect(buildInstagramAuthUrl(state), [
+      { name: STATE_COOKIE, value: state },
+    ]);
   } catch (error) {
     console.error("Instagram connect error:", error);
     return NextResponse.redirect(

@@ -1,0 +1,102 @@
+# Frequent cron triggers for Vercel Hobby (native Vercel crons are daily-only).
+# Add repo secrets: CRON_SECRET, APP_URL (e.g. https://re-social.vercel.app)
+#
+# Note: GitHub schedule delivery can drift a few minutes under load.
+
+name: Cron jobs
+
+on:
+  schedule:
+    # Every 5 minutes — scheduled publish
+    - cron: "*/5 * * * *"
+    # Hourly — inbox sync (minute 7 to avoid colliding with publish)
+    - cron: "7 * * * *"
+    # Every 15 minutes — repurpose sources
+    - cron: "*/15 * * * *"
+    # Daily 06:00 UTC — usage reset
+    - cron: "0 6 * * *"
+    # Daily 08:00 UTC — email reports
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+    inputs:
+      job:
+        description: "Which cron path to hit"
+        required: true
+        type: choice
+        options:
+          - publish-scheduled
+          - inbox-sync
+          - repurpose-sources
+          - usage-reset
+          - reports-send
+
+jobs:
+  publish-scheduled:
+    if: github.event_name == 'schedule' && github.event.schedule == '*/5 * * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'publish-scheduled')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger publish-scheduled
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          test -n "$CRON_SECRET" && test -n "$APP_URL"
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/cron/publish-scheduled"
+
+  inbox-sync:
+    if: github.event_name == 'schedule' && github.event.schedule == '7 * * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'inbox-sync')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger inbox-sync
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          test -n "$CRON_SECRET" && test -n "$APP_URL"
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/cron/inbox-sync"
+
+  repurpose-sources:
+    if: github.event_name == 'schedule' && github.event.schedule == '*/15 * * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'repurpose-sources')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger repurpose-sources
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          test -n "$CRON_SECRET" && test -n "$APP_URL"
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/cron/repurpose-sources"
+
+  usage-reset:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 6 * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'usage-reset')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger usage-reset
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          test -n "$CRON_SECRET" && test -n "$APP_URL"
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/cron/usage-reset"
+
+  reports-send:
+    if: github.event_name == 'schedule' && github.event.schedule == '0 8 * * *' || (github.event_name == 'workflow_dispatch' && inputs.job == 'reports-send')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger reports-send
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          test -n "$CRON_SECRET" && test -n "$APP_URL"
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${APP_URL%/}/api/reports/send"

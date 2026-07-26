@@ -89,7 +89,8 @@ function AccountsContent() {
         facebook_oauth_failed: "Facebook authorization failed. Please try again.",
         facebook_no_pages:
           "No Facebook Pages found. Create a Page and try again.",
-        invalid_state: "Invalid OAuth state. Please try connecting again.",
+        invalid_state:
+          "OAuth session expired or cookies were blocked. Log in, then connect again in the same browser window (avoid private/incognito).",
         plan_limit_platforms:
           "Platform limit reached for your plan. Upgrade to connect more.",
       };

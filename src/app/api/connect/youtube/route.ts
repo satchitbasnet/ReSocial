@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { randomBytes } from "crypto";
 import { getSession } from "@/lib/auth";
 import { getAppUrl } from "@/lib/config";
@@ -9,10 +8,10 @@ import {
   isYouTubePermissionTier,
   type YouTubePermissionTier,
 } from "@/lib/platforms/youtube-permissions";
+import { oauthRedirect } from "@/lib/oauth-state";
 
 const STATE_COOKIE = "youtube_oauth_state";
 const CONTEXT_COOKIE = "youtube_oauth_context";
-const STATE_TTL = 60 * 10;
 
 export async function GET(request: NextRequest) {
   const appUrl = getAppUrl();
@@ -35,23 +34,13 @@ export async function GET(request: NextRequest) {
     const label = request.nextUrl.searchParams.get("label")?.trim() || "";
 
     const state = randomBytes(24).toString("hex");
-    const cookieStore = await cookies();
-    const cookieOpts = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax" as const,
-      maxAge: STATE_TTL,
-      path: "/",
-    };
-
-    cookieStore.set(STATE_COOKIE, state, cookieOpts);
-    cookieStore.set(
-      CONTEXT_COOKIE,
-      JSON.stringify({ permission, label }),
-      cookieOpts
-    );
-
-    return NextResponse.redirect(buildYouTubeAuthUrl(state, permission));
+    return oauthRedirect(buildYouTubeAuthUrl(state, permission), [
+      { name: STATE_COOKIE, value: state },
+      {
+        name: CONTEXT_COOKIE,
+        value: JSON.stringify({ permission, label }),
+      },
+    ]);
   } catch (error) {
     console.error("YouTube connect error:", error);
     return NextResponse.redirect(

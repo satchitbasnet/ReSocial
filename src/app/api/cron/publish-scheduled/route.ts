@@ -3,13 +3,12 @@ import { and, eq, lte, isNotNull } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { posts } from "@/lib/db/schema";
 import { executePublishForPost } from "@/lib/publish/execute-distributions";
+import { assertCronAuthorized } from "@/lib/cron-auth";
 
 /** Every 5 minutes — publish posts whose scheduledAt has passed. */
 export async function GET(request: Request) {
-  const secret = request.headers.get("authorization");
-  if (secret !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuthorized(request);
+  if (denied) return denied;
 
   const db = getDb();
   const now = new Date();

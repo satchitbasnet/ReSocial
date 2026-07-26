@@ -8,6 +8,7 @@ import {
   renderReportHtml,
   sendReportEmail,
 } from "@/lib/reports/builder";
+import { assertCronAuthorized } from "@/lib/cron-auth";
 
 export async function POST() {
   const session = await getSession();
@@ -48,10 +49,8 @@ export async function POST() {
 
 /** Cron endpoint — call daily with CRON_SECRET header */
 export async function GET(request: Request) {
-  const secret = request.headers.get("authorization");
-  if (secret !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuthorized(request);
+  if (denied) return denied;
 
   const db = getDb();
   const now = new Date();

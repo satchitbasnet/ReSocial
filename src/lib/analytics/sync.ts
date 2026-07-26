@@ -1,4 +1,4 @@
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte, lt, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import {
   distributions,
@@ -223,7 +223,7 @@ export async function syncDailyStats(
         eq(postMetrics.userId, userId),
         eq(postMetrics.platform, platform),
         gte(postMetrics.syncedAt, dayStart),
-        sql`${postMetrics.syncedAt} < ${dayEnd}`
+        lt(postMetrics.syncedAt, dayEnd)
       )
     );
 
