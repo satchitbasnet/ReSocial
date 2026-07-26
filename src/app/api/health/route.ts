@@ -17,12 +17,16 @@ export async function GET() {
       tiktokConfigured: Boolean(
         process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET
       ),
+      twitterConfigured: Boolean(
+        process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET
+      ),
       appUrl,
       redirectUris: {
         instagram: `${appUrl}/api/auth/callback/instagram`,
         facebook: `${appUrl}/api/auth/callback/facebook`,
         tiktok: `${appUrl}/api/auth/callback/tiktok`,
         youtube: `${appUrl}/api/auth/callback/youtube`,
+        twitter: `${appUrl}/api/auth/callback/twitter`,
       },
     },
     databaseConfigured: Boolean(process.env.DATABASE_URL),

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { PLATFORMS, PLATFORM_CAPTION_LIMITS, type PlatformId } from "@/lib/constants";
 import { PlatformIcon } from "@/components/ui/platform-icon";
-import { Upload, Check, Loader2, X } from "lucide-react";
+import { Upload, Check, Loader2, X, Sparkles } from "lucide-react";
 import { UpgradeModal } from "@/components/ui/upgrade-modal";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +39,13 @@ export default function UploadPage() {
     limit: "videos" | "platforms";
   }>({ open: false, limit: "videos" });
   const [pendingApproval, setPendingApproval] = useState(false);
+  const [captionTone, setCaptionTone] = useState<
+    "professional" | "casual" | "playful"
+  >("casual");
+  const [generatingCaption, setGeneratingCaption] = useState(false);
+  const [captionSource, setCaptionSource] = useState<"ai" | "template" | null>(
+    null
+  );
 
   useEffect(() => {
     fetch("/api/accounts")
@@ -166,6 +173,49 @@ export default function UploadPage() {
 
   function handlePlatformCaptionChange(platformId: string, value: string) {
     setPlatformCaptions((prev) => ({ ...prev, [platformId]: value }));
+  }
+
+  async function generateCaptionSuggestion() {
+    if (!title.trim()) {
+      setError("Add a title first so we can suggest a caption.");
+      return;
+    }
+    if (selectedPlatforms.length === 0) {
+      setError("Select at least one platform for caption suggestions.");
+      return;
+    }
+
+    setError("");
+    setGeneratingCaption(true);
+    setCaptionSource(null);
+
+    try {
+      const res = await fetch("/api/ai/caption", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          platforms: selectedPlatforms,
+          tone: captionTone,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Failed to generate caption.");
+        return;
+      }
+
+      handleCaptionChange(data.caption ?? "");
+      if (data.platformCaptions && typeof data.platformCaptions === "object") {
+        setPlatformCaptions(data.platformCaptions);
+        setSameCaption(false);
+      }
+      setCaptionSource(data.source === "ai" ? "ai" : "template");
+    } catch {
+      setError("Failed to generate caption. Please try again.");
+    } finally {
+      setGeneratingCaption(false);
+    }
   }
 
   function togglePlatform(platformId: string) {
@@ -425,9 +475,42 @@ export default function UploadPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Caption / Description
-          </label>
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+            <label className="block text-sm font-medium text-gray-700">
+              Caption / Description
+            </label>
+            <div className="flex items-center gap-2">
+              <select
+                value={captionTone}
+                onChange={(e) =>
+                  setCaptionTone(
+                    e.target.value as "professional" | "casual" | "playful"
+                  )
+                }
+                className="text-xs rounded-lg border border-gray-200 px-2 py-1.5 bg-white text-gray-600"
+                aria-label="Caption tone"
+              >
+                <option value="casual">Casual</option>
+                <option value="professional">Professional</option>
+                <option value="playful">Playful</option>
+              </select>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={generateCaptionSuggestion}
+                disabled={generatingCaption}
+                className="!rounded-lg"
+              >
+                {generatingCaption ? (
+                  <Loader2 size={14} className="mr-1.5 animate-spin" />
+                ) : (
+                  <Sparkles size={14} className="mr-1.5" />
+                )}
+                {generatingCaption ? "Generating…" : "Suggest caption"}
+              </Button>
+            </div>
+          </div>
           <textarea
             value={caption}
             onChange={(e) => handleCaptionChange(e.target.value)}
@@ -437,6 +520,14 @@ export default function UploadPage() {
           />
           <p className="text-xs text-gray-400 mt-1">
             {caption.length} characters (default for all platforms)
+            {captionSource === "ai" && (
+              <span className="text-brand-600 ml-2">· AI suggestion</span>
+            )}
+            {captionSource === "template" && (
+              <span className="text-gray-500 ml-2">
+                · Template (add GEMINI_API_KEY for AI)
+              </span>
+            )}
           </p>
         </div>
       </div>

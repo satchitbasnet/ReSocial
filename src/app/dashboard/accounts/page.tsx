@@ -26,6 +26,7 @@ const OAUTH_PLATFORMS = new Set([
   "youtube",
   "instagram",
   "facebook",
+  "twitter",
 ]);
 
 function AccountsContent() {
@@ -81,12 +82,16 @@ function AccountsContent() {
           "Instagram is not configured. Add INSTAGRAM_CLIENT_ID and INSTAGRAM_CLIENT_SECRET.",
         facebook_config:
           "Facebook is not configured. Add FACEBOOK_CLIENT_ID and FACEBOOK_CLIENT_SECRET.",
+        twitter_config:
+          "X is not configured. Add TWITTER_CLIENT_ID and TWITTER_CLIENT_SECRET.",
         tiktok_oauth_failed: "TikTok authorization failed. Please try again.",
         youtube_oauth_failed: "YouTube authorization failed. Please try again.",
         instagram_oauth_failed:
           errorDetail ?? "Instagram authorization failed. Please try again.",
         instagram_no_business: INSTAGRAM_PERSONAL_ACCOUNT_NOTICE,
         facebook_oauth_failed: "Facebook authorization failed. Please try again.",
+        twitter_oauth_failed:
+          errorDetail ?? "X authorization failed. Please try again.",
         facebook_no_pages:
           "No Facebook Pages found. Create a Page and try again.",
         invalid_state:

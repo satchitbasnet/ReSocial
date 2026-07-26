@@ -10,6 +10,7 @@ import {
 import { youtubeScopesAllowUpload } from "@/lib/platforms/youtube-permissions";
 import { publishVideoToInstagram, publishPhotosToInstagram } from "@/lib/platforms/instagram";
 import { publishVideoToFacebook, publishPhotosToFacebook } from "@/lib/platforms/facebook";
+import { publishToTwitter } from "@/lib/platforms/twitter";
 
 export interface PublishMediaOptions {
   mediaType?: string;
@@ -83,7 +84,8 @@ export async function publishToPlatform(
     mediaOptions?.mediaType &&
     mediaOptions.mediaType !== "video" &&
     account.platform !== "instagram" &&
-    account.platform !== "facebook"
+    account.platform !== "facebook" &&
+    account.platform !== "twitter"
   ) {
     return {
       success: false,
@@ -228,6 +230,38 @@ export async function publishToPlatform(
     }
   }
 
+  if (account.platform === "twitter") {
+    if (!account.accessToken || account.accessToken === "demo_token") {
+      return {
+        success: false,
+        error: "X account not connected via OAuth. Reconnect at Accounts.",
+      };
+    }
+
+    try {
+      const { platformPostId } = await publishToTwitter(
+        account.accessToken,
+        account.refreshToken,
+        mediaUrl,
+        caption,
+        {
+          mediaType: mediaOptions?.mediaType,
+          mediaUrls: publishingPhotos ? photoUrls : undefined,
+          onTokenRefresh,
+        }
+      );
+      return { success: true, platformPostId };
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "X publish failed";
+      console.error(
+        `[ReSocial] X publish error (@${account.accountName}):`,
+        message
+      );
+      return { success: false, error: message };
+    }
+  }
+
   // Remaining platforms: simulated
   await new Promise((resolve) => setTimeout(resolve, 500 + Math.random() * 1000));
 
@@ -260,13 +294,16 @@ export function getOAuthUrl(platform: PlatformId): string {
   if (platform === "facebook") {
     return `${getAppUrl()}/api/connect/facebook`;
   }
+  if (platform === "twitter") {
+    return `${getAppUrl()}/api/connect/twitter`;
+  }
 
   const baseUrls: Record<PlatformId, string> = {
     tiktok: `${getAppUrl()}/api/connect/tiktok`,
     youtube: "https://accounts.google.com/o/oauth2/v2/auth",
     instagram: "https://api.instagram.com/oauth/authorize",
     facebook: "https://www.facebook.com/v18.0/dialog/oauth",
-    twitter: "https://twitter.com/i/oauth2/authorize",
+    twitter: `${getAppUrl()}/api/connect/twitter`,
     pinterest: "https://www.pinterest.com/oauth",
     snapchat: "https://accounts.snapchat.com/login/oauth2/authorize",
   };
